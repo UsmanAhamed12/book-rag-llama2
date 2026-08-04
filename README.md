@@ -53,6 +53,28 @@ A production-ready Retrieval-Augmented Generation (RAG) application that answers
 - Chunk Metadata
 - Ingestion Pipeline
 - Unit Tests
+- PDF Loader
+- Text Cleaner
+- Recursive Chunker
+- Ingestion Pipeline
+- Embedding Provider
+- Embedding Service
+
+# Milestone 1 - Document Ingestion ✅
+
+Completed:
+
+- FastAPI project setup
+- Project architecture
+- Configuration management
+- Logging
+- PDF Loader
+- Text Cleaner
+- Recursive Chunker
+- Document Model
+- Chunk Metadata
+- Ingestion Pipeline
+- Unit Tests
 
 ---
 

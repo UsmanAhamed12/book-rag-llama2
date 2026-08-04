@@ -28,6 +28,11 @@ class Settings(BaseSettings):
 
     book_path: str = "data/uploads/Data_Engineering.pdf"
 
+    chroma_path: str = "data/chroma"
+
+    # class Config:
+    #     env_file = ".env"
+
 
 @lru_cache
 def get_settings() -> Settings:
