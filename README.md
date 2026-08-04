@@ -37,6 +37,9 @@ A production-ready Retrieval-Augmented Generation (RAG) application that answers
 - [x] Centralized configuration
 - [x] Environment variable management
 - [x] Logging system
+- [x] API router
+- [x] Health endpoint
+- [x] Route modularization
 
 ---
 
