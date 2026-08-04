@@ -1,9 +1,5 @@
-from app.ingestion.loaders.pdf_loader import PDFLoader
-from pathlib import Path
 from app.core.settings import settings
-
-
-
+from app.ingestion.loaders.pdf_loader import PDFLoader
 
 
 def test_pdf_loader_reads_book():

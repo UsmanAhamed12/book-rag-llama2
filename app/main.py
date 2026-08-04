@@ -15,4 +15,3 @@ app.include_router(api_router)
 @app.on_event("startup")
 async def startup_event():
     logger.info("Application started.")
-    

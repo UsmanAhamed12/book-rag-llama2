@@ -1,5 +1,5 @@
-from app.ingestion.loaders.pdf_loader import PDFLoader
 from app.core.settings import settings
+from app.ingestion.loaders.pdf_loader import PDFLoader
 
 loader = PDFLoader(settings.book_path)
 

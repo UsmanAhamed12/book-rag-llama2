@@ -8,6 +8,4 @@ router = APIRouter(
 
 @router.post("/")
 async def ask_question():
-    return {
-        "message": "Coming soon"
-    }
+    return {"message": "Coming soon"}

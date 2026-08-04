@@ -43,6 +43,16 @@ A production-ready Retrieval-Augmented Generation (RAG) application that answers
 - PDF Loader
 - Text Cleaner
 - Automated Tests
+- FastAPI API
+- Settings
+- Logging
+- PDF Loader
+- Text Cleaner
+- Recursive Chunker
+- Document Model
+- Chunk Metadata
+- Ingestion Pipeline
+- Unit Tests
 
 ---
 
