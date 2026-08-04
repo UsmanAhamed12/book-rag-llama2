@@ -40,6 +40,9 @@ A production-ready Retrieval-Augmented Generation (RAG) application that answers
 - [x] API router
 - [x] Health endpoint
 - [x] Route modularization
+- PDF Loader
+- Text Cleaner
+- Automated Tests
 
 ---
 

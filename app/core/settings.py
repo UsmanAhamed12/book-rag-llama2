@@ -2,7 +2,6 @@ from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-
 class Settings(BaseSettings):
     """Application settings."""
 
@@ -25,6 +24,8 @@ class Settings(BaseSettings):
         case_sensitive=False,
         extra="ignore",
     )
+
+    book_path: str = "data/raw/Data_Engineering.pdf"
 
 
 @lru_cache
