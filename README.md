@@ -77,6 +77,14 @@ Completed:
 - Unit Tests
 
 ---
+## Milestone 3 - Retrieval Engine
+
+Completed:
+
+- ChromaDB indexing
+- Vector similarity search
+- Retriever service
+- Semantic search
 
 ## 📅 Roadmap
 
