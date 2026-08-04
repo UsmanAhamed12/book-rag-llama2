@@ -86,6 +86,15 @@ Completed:
 - Retriever service
 - Semantic search
 
+## Milestone 4 - RAG Pipeline
+
+Completed:
+
+- Retrieval engine
+- Context builder
+- Prompt template
+- RAG pipeline foundation
+
 ## 📅 Roadmap
 
 - [ ] API versioning

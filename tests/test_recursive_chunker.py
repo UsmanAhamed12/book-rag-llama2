@@ -6,8 +6,8 @@ def test_chunker_creates_chunks():
 
     chunker = RecursiveChunker(
         document_id="book-1",
-        chunk_size=1000,
-        overlap=200,
+        chunk_size=800,
+        overlap=150,
     )
 
     chunks = chunker.split(text)

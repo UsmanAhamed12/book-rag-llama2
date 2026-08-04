@@ -23,7 +23,7 @@ class Retriever:
     def search(
         self,
         query: str,
-        top_k: int = 5,
+        top_k: int = 8,
     ) -> list[RetrievalResult]:
 
         query_embedding = (

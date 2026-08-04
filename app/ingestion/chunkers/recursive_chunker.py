@@ -9,8 +9,8 @@ class RecursiveChunker(BaseChunker):
     def __init__(
         self,
         document_id: str,
-        chunk_size: int = 1000,
-        overlap: int = 200,
+        chunk_size: int = 800,
+        overlap: int = 150,
     ):
         self.document_id = document_id
         self.chunk_size = chunk_size

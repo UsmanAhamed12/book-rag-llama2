@@ -15,7 +15,7 @@ retriever = Retriever(
 
 results = retriever.search(
     "What is data engineering?",
-    top_k=3,
+    top_k=8,
 )
 
 
