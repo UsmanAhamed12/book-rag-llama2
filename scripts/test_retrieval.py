@@ -18,6 +18,8 @@ results = retriever.search(
     top_k=8,
 )
 
+print(results)
+print(len(results))
 
 for result in results:
 

@@ -32,13 +32,14 @@ class Settings(BaseSettings):
 
     upload_dir: str = "data/uploads"
 
-    # postgres_url: str = (
-    #     "postgresql+psycopg://postgres:postgres123@localhost:5432/book_rag"
-    # )
     postgres_url: str = (
-"postgresql+psycopg://postgres:postgres123@postgres:5432/book_rag"
-)
+        "postgresql+psycopg://postgres:postgres123@localhost:5432/book_rag"
+    )
+#     postgres_url: str = (
+# "postgresql+psycopg://postgres:postgres123@postgres:5432/book_rag"
+# )
 
+    document_id: str = "data_engineering_book"
     # class Config:
     #     env_file = ".env"
 

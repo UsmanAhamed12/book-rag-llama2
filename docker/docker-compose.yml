@@ -16,29 +16,35 @@ services:
     environment:
       POSTGRES_URL: postgresql+psycopg://postgres:postgres123@postgres:5432/book_rag
 
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/', timeout=2).read()"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 120s
 
     depends_on:
-      - postgres
+      postgres:
+        condition: service_started
 
 
 
   frontend:
-
     build:
-      context: ..
-
-      dockerfile: docker/Dockerfile.frontend
-
+        context: ..
+        dockerfile: docker/Dockerfile.frontend
 
     container_name: rag-frontend
 
-
     ports:
-      - "8501:8501"
+        - "8501:8501"
 
+    environment:
+        API_URL: http://api:8000
 
     depends_on:
-      - api
+        api:
+            condition: service_healthy
 
 
 

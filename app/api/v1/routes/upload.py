@@ -26,15 +26,6 @@ def upload_pdf(
     )
 
 
-    # Ingest PDF
-    chunks = (
-        container.ingestion_service
-        .ingest(
-            str(pdf_path)
-        )
-    )
-
-
     # Save document metadata to PostgreSQL
     db = SessionLocal()
 
@@ -42,10 +33,23 @@ def upload_pdf(
 
         document = DocumentDB(
             filename=file.filename,
-            chunks=chunks,
+            chunks=0,
         )
 
         db.add(document)
+
+        db.commit()
+
+        db.refresh(document)
+
+        chunks = (
+            container.ingestion_service.ingest(
+                str(pdf_path),
+                str(document.id),
+            )
+        )
+
+        document.chunks = chunks
 
         db.commit()
 

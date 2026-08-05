@@ -20,6 +20,7 @@ class IngestionService:
     def ingest(
         self,
         pdf_path: str,
+        document_id: str,
     ) -> int:
 
         # Load PDF
@@ -30,7 +31,7 @@ class IngestionService:
         cleaner = TextCleaner()
 
         chunker = RecursiveChunker(
-            document_id=pdf_path
+            document_id=document_id
         )
 
         chunks = []
@@ -48,6 +49,10 @@ class IngestionService:
             self.embedding_service
             .embed_chunks(chunks)
         )
+
+        print("Chunks:", len(chunks))
+        print("Embeddings:", len(embeddings))
+        print(chunks[0])
 
 
         # Store in Chroma
