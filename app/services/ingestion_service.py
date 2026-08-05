@@ -25,23 +25,22 @@ class IngestionService:
         # Load PDF
         loader = PDFLoader(pdf_path)
 
-        text = loader.load()
+        pages = loader.load()
 
-
-        # Clean text
         cleaner = TextCleaner()
 
-        cleaned_text = cleaner.clean(text)
-
-
-        # Create chunks
         chunker = RecursiveChunker(
             document_id=pdf_path
         )
 
-        chunks = chunker.split(
-            cleaned_text
-        )
+        chunks = []
+
+        for page in pages:
+            cleaned_text = cleaner.clean(page.text)
+
+            page_chunks = chunker.split(cleaned_text)
+
+            chunks.extend(page_chunks)
 
 
         # Generate embeddings

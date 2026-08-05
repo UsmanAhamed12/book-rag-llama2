@@ -6,6 +6,8 @@ from app.models.metadata import ChunkMetadata
 
 
 class RecursiveChunker(BaseChunker):
+    """Splits text into overlapping chunks."""
+
     def __init__(
         self,
         document_id: str,
@@ -23,7 +25,7 @@ class RecursiveChunker(BaseChunker):
         index = 0
 
         while start < len(text):
-            end = start + self.chunk_size
+            end = min(start + self.chunk_size, len(text))
 
             chunk_text = text[start:end]
 
@@ -35,14 +37,18 @@ class RecursiveChunker(BaseChunker):
                     text=chunk_text,
                     metadata=ChunkMetadata(
     source=self.document_id,
+    page_number=0,
     chunk_index=index,
     start_char=start,
     end_char=min(end, len(text)),
-),
+)
                 )
             )
 
-            index += 1
+            if end == len(text):
+                break
+
             start += self.chunk_size - self.overlap
+            index += 1
 
         return chunks

@@ -16,23 +16,47 @@ class ChromaVectorStore:
         )
 
 
-    def add(self,chunks: list[Chunk],embeddings: list[list[float]],) -> None:
+    def add(
+        self,
+        chunks: list[Chunk],
+        embeddings: list[list[float]],
+    ) -> None:
+
 
         self.collection.add(
+
             ids=[
                 chunk.chunk_id
                 for chunk in chunks
             ],
+
+
             documents=[
                 chunk.text
                 for chunk in chunks
             ],
+
+
             embeddings=embeddings,
+
+
             metadatas=[
+
                 {
                     "document_id": chunk.document_id,
+
                     "chunk_index": chunk.chunk_index,
+
+                    "source": chunk.metadata.source,
+
+                    "page_number": chunk.metadata.page_number,
+
+                    "start_char": chunk.metadata.start_char,
+
+                    "end_char": chunk.metadata.end_char,
+
                 }
+
                 for chunk in chunks
             ],
         )

@@ -1,17 +1,22 @@
 from fastapi import FastAPI
 
 from app.api.router import api_router
-from app.core.logging import logger
-from app.core.settings import settings
+
 
 app = FastAPI(
-    title=settings.app_name,
-    version=settings.app_version,
+    title="Book RAG Llama2",
+    version="1.0.0"
 )
 
-app.include_router(api_router)
+
+app.include_router(
+    api_router,
+)
 
 
-@app.on_event("startup")
-async def startup_event():
-    logger.info("Application started.")
+@app.get("/")
+def health_check():
+
+    return {
+        "status": "running"
+    }

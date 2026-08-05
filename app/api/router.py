@@ -1,9 +1,29 @@
 from fastapi import APIRouter
 
-from app.api.routes import chat, documents, health
+from app.api.v1.routes import chat as chat_router
+from app.api.v1.routes import upload as upload_router
+from app.api.v1.routes import documents as documents_router
 
 api_router = APIRouter()
 
-api_router.include_router(health.router)
-api_router.include_router(documents.router)
-api_router.include_router(chat.router)
+api_router.include_router(
+    chat_router.router,
+    prefix="/chat",
+    tags=["Chat"],
+)
+
+api_router.include_router(
+    upload_router.router,
+    prefix="/upload",
+    tags=["Upload"],
+)
+
+# api_router.include_router(
+#     documents_router.api_router,
+#     prefix="/documents",
+#     tags=["Documents"],
+# )
+
+api_router.include_router(
+    documents_router.router,
+)

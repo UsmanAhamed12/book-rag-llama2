@@ -30,6 +30,15 @@ class Settings(BaseSettings):
 
     chroma_path: str = "data/chroma"
 
+    upload_dir: str = "data/uploads"
+
+    # postgres_url: str = (
+    #     "postgresql+psycopg://postgres:postgres123@localhost:5432/book_rag"
+    # )
+    postgres_url: str = (
+"postgresql+psycopg://postgres:postgres123@postgres:5432/book_rag"
+)
+
     # class Config:
     #     env_file = ".env"
 

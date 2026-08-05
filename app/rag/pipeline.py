@@ -16,9 +16,9 @@ class RAGPipeline:
 
 
     def build_prompt(
-        self,
-        question: str,
-        top_k: int = 8,
+    self,
+    question: str,
+    top_k: int = 5,
     ) -> str:
 
         results = self.retriever.search(
@@ -27,11 +27,41 @@ class RAGPipeline:
         )
 
 
+        context_parts = []
+
+
+        for result in results:
+
+            source = result.metadata.get(
+                "document_id",
+                "unknown"
+            )
+
+            chunk = result.metadata.get(
+                "chunk_index",
+                "unknown"
+            )
+
+
+            context_parts.append(
+
+                f"""
+    SOURCE:
+    {source}
+
+    CHUNK:
+    {chunk}
+
+    CONTENT:
+    {result.text}
+
+    """
+
+            )
+
+
         context = "\n\n".join(
-            [
-                result.text
-                for result in results
-            ]
+            context_parts
         )
 
 

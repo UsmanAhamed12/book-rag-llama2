@@ -1,8 +1,11 @@
 from dataclasses import dataclass
 
 
-@dataclass(slots=True)
+@dataclass
 class RetrievalResult:
+
     text: str
+
     score: float
+
     metadata: dict
