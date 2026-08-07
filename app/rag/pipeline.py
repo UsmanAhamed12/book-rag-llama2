@@ -1,6 +1,7 @@
 from app.retrieval.retriever import Retriever
 from app.rag.prompt import SYSTEM_PROMPT
 from app.llm.service import LLMService
+from app.services.chat_memory_service import ChatMemoryService
 
 
 class RAGPipeline:
@@ -8,15 +9,18 @@ class RAGPipeline:
     def __init__(
         self,
         retriever: Retriever,
-        llm: LLMService
+        llm: LLMService,
+        memory: ChatMemoryService,
     ) -> None:
 
         self.retriever = retriever
         self.llm = llm
+        self.memory = memory
 
 
     def build_prompt(
     self,
+    session_id: int,
     question: str,
     top_k: int = 5,
     ) -> str:
@@ -25,6 +29,10 @@ class RAGPipeline:
             question,
             top_k,
         )
+
+        history = self.build_history(
+    session_id
+)
 
 
         context_parts = []
@@ -42,22 +50,24 @@ class RAGPipeline:
                 "unknown"
             )
 
+            page = result.metadata.get(
+                "page_number",
+                "unknown"
+            )
+
 
             context_parts.append(
+                                f"""
+                            ==========================================
+                            Document: {source}
+                            Page: {page}
+                            Chunk: {chunk}
 
-                f"""
-    SOURCE:
-    {source}
-
-    CHUNK:
-    {chunk}
-
-    CONTENT:
-    {result.text}
-
-    """
-
-            )
+                            Content:
+                            {result.text}
+                            ==========================================
+                            """
+                )
 
 
         context = "\n\n".join(
@@ -66,21 +76,61 @@ class RAGPipeline:
 
 
         return SYSTEM_PROMPT.format(
+            history=history,
             context=context,
             question=question,
         )
 
     def ask(
-    self,
-    question: str,
-):
+        self,
+        session_id: int,
+        question: str,
+    ) -> dict:
 
-        prompt = self.build_prompt(
-            question
+        # Save user message
+        self.memory.save_message(
+            session_id=session_id,
+            role="user",
+            message=question,
         )
 
+        # Build prompt with conversation history + RAG context
+        prompt = self.build_prompt(
+            session_id=session_id,
+            question=question,
+        )
+
+        # Generate answer
         answer = self.llm.answer(
             prompt
         )
 
-        return answer
+        # Save assistant response
+        self.memory.save_message(
+            session_id=session_id,
+            role="assistant",
+            message=answer,
+        )
+
+        return {
+            "answer": answer,
+        }
+    
+    def build_history(
+        self,
+        session_id: int,
+    ) -> str:
+
+        messages = self.memory.get_messages(
+            session_id
+        )
+
+        history = []
+
+        for message in messages:
+
+            history.append(
+                f"{message.role}: {message.message}"
+            )
+
+        return "\n".join(history)

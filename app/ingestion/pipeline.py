@@ -34,6 +34,7 @@ class IngestionPipeline:
         # Chunk cleaned text
         chunker = RecursiveChunker(
             document_id=document.document_id,
+            source=str(pdf_path),
         )
 
         chunks = chunker.split(clean_text)

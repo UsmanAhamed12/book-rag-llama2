@@ -12,6 +12,28 @@ from app.models.page import Page
 class PDFLoader:
     def __init__(self, pdf_path: str | Path):
         self.pdf_path = Path(pdf_path)
+        self._resolve_path()
+
+    def _resolve_path(self) -> None:
+        if self.pdf_path.exists():
+            return
+
+        if self.pdf_path.suffix.lower() != ".pdf":
+            candidate = self.pdf_path.with_suffix(".pdf")
+            if candidate.exists():
+                self.pdf_path = candidate
+                return
+
+        if self.pdf_path.name != "Data_Engineering.pdf":
+            alt_name = self.pdf_path.with_name(self.pdf_path.name.replace("_", " "))
+            if alt_name.exists():
+                self.pdf_path = alt_name
+                return
+
+        if self.pdf_path.parent.exists():
+            matches = sorted(self.pdf_path.parent.glob("*.pdf"))
+            if matches:
+                self.pdf_path = matches[0]
 
     def load(self) -> list[Page]:
         if not self.pdf_path.exists():

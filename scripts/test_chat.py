@@ -1,3 +1,5 @@
+from app.db.postgres import SessionLocal
+
 from app.embeddings.sentence_transformer_provider import (
     SentenceTransformerProvider,
 )
@@ -5,28 +7,58 @@ from app.embeddings.sentence_transformer_provider import (
 from app.retrieval.retriever import Retriever
 from app.rag.pipeline import RAGPipeline
 from app.llm.service import LLMService
+from app.services.chat_memory_service import ChatMemoryService
 
 
-embedding = SentenceTransformerProvider()
+db = SessionLocal()
 
+try:
 
-retriever = Retriever(
-    embedding
-)
+    # Chat memory
+    memory = ChatMemoryService(db)
 
+    # Create new conversation
+    session = memory.create_session()
 
-llm = LLMService()
+    # Embeddings
+    embedding = SentenceTransformerProvider()
 
+    # Retriever
+    retriever = Retriever(
+        embedding
+    )
 
-rag = RAGPipeline(
-    retriever,
-    llm,
-)
+    # LLM
+    llm = LLMService()
 
+    # RAG pipeline
+    rag = RAGPipeline(
+        retriever,
+        llm,
+        memory,
+    )
 
-answer = rag.ask(
-    "What is data?"
-)
+    # First question
+    response = rag.ask(
+        session_id=session.id,
+        question="What is data?",
+    )
 
+    print("\n## Answer 1\n")
+    print(response["answer"])
 
-print(answer)
+    # Second question
+    response = rag.ask(
+        session_id=session.id,
+        question="Explain it in simple terms.",
+    )
+
+    print("\n## Answer 2\n")
+    print(response["answer"])
+
+    print("\n## Session ID")
+    print(session.id)
+
+finally:
+
+    db.close()

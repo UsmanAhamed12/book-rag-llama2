@@ -26,7 +26,8 @@ service = IngestionService(
 
 count = service.ingest(
     settings.book_path,
-    settings.document_id
+    settings.document_id,
+    settings.book_path,
 )
 
 

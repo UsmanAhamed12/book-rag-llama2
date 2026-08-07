@@ -11,15 +11,22 @@ class RecursiveChunker(BaseChunker):
     def __init__(
         self,
         document_id: str,
+        source: str | None = None,
         chunk_size: int = 800,
         overlap: int = 150,
     ):
         self.document_id = document_id
+        self.source = source or document_id
         self.chunk_size = chunk_size
         self.overlap = overlap
 
-    def split(self, text: str) -> list[Chunk]:
+    def split(
+            self,
+            text: str,
+            page_number: int | None = None,
+        ) -> list[Chunk]:
         chunks: list[Chunk] = []
+        page_number = 0 if page_number is None else page_number
 
         start = 0
         index = 0
@@ -36,12 +43,12 @@ class RecursiveChunker(BaseChunker):
                     chunk_index=index,
                     text=chunk_text,
                     metadata=ChunkMetadata(
-    source=self.document_id,
-    page_number=0,
-    chunk_index=index,
-    start_char=start,
-    end_char=min(end, len(text)),
-)
+                            source=self.source,
+                            page_number=page_number,
+                            chunk_index=index,
+                            start_char=start,
+                            end_char=min(end, len(text)),
+                        ),
                 )
             )
 

@@ -26,6 +26,14 @@ from app.rag.pipeline import (
     RAGPipeline,
 )
 
+from app.services.chat_memory_service import (
+    ChatMemoryService,
+)
+
+from app.db.postgres import (
+    SessionLocal,
+)
+
 
 class Container:
     """
@@ -70,12 +78,17 @@ class Container:
         # LLM
         self.llm = LLMService()
 
+        # Chat memory
+        self.chat_memory_service = ChatMemoryService(
+            SessionLocal()
+        )
 
         # RAG
         self.rag_pipeline = (
             RAGPipeline(
                 self.retriever,
                 self.llm,
+                self.chat_memory_service,
             )
         )
 

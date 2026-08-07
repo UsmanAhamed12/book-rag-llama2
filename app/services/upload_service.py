@@ -3,8 +3,6 @@ import shutil
 
 from fastapi import UploadFile
 
-from app.core import settings
-
 
 class UploadService:
     """Handles PDF uploads."""
@@ -23,7 +21,7 @@ class UploadService:
     def save(
         self,
         file: UploadFile,
-    ) -> Path:
+    ) -> tuple[Path, int]:
 
         file_path = self.upload_dir / file.filename
 
@@ -33,4 +31,6 @@ class UploadService:
                 buffer,
             )
 
-        return file_path
+        file_size = file_path.stat().st_size
+
+        return file_path, file_size

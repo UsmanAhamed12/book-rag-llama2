@@ -26,7 +26,8 @@ class Retriever:
     def search(
         self,
         query: str,
-        top_k: int = 5,
+        top_k: int = 10,
+        score_threshold: float = 0.80
     ) -> list[RetrievalResult]:
 
 
@@ -54,29 +55,31 @@ class Retriever:
         metadatas = results["metadatas"][0]
 
 
-        output = []
-
+        output: list[RetrievalResult] = []
 
         for text, distance, metadata in zip(
             documents,
             distances,
             metadatas,
         ):
-
+            similarity = 1 / (1 + float(distance))
 
             output.append(
-
                 RetrievalResult(
-
                     text=text,
-
-                    score=float(distance),
-
+                    score=similarity,
                     metadata=metadata,
-
+                    document_id=metadata["document_id"],
+                    page_number=metadata["page_number"],
                 )
-
             )
 
+        filtered = [
+            result
+            for result in output
+            if result.score <= score_threshold
+        ]
 
-        return output
+        filtered.sort(key=lambda x: x.score)
+
+        return filtered

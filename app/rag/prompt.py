@@ -96,6 +96,10 @@ If multiple chunks are used, list all sources.
 - Prioritize correctness over completeness.
 - Help the user build practical Data Engineering knowledge.
 
+Previous Conversation:
+
+{history}
+
 Retrieved Context:
 
 {context}
@@ -115,4 +119,6 @@ Sources:
 - Chunk number
 
 """
+
+
 

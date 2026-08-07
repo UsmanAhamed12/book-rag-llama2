@@ -18,10 +18,19 @@ rag = RAGPipeline(
 
 question = "What is data engineering?"
 
-answer = rag.ask(question)
+response = rag.ask(question)
+
+print(response["answer"])
+
+print("\nSources")
+
+for source in response["sources"]:
+    print(
+        f"Document: {source.document_id} | Page: {source.page_number}"
+    )
 
 print("\nQuestion:")
 print(question)
 
 print("\nAnswer:")
-print(answer)
+print(response["answer"])

@@ -4,6 +4,8 @@ from app.ingestion.loaders.pdf_loader import PDFLoader
 from app.ingestion.cleaners.text_cleaner import TextCleaner
 from app.vectorstores.chroma_store import ChromaVectorStore
 
+from pathlib import Path
+
 
 class IngestionService:
 
@@ -21,6 +23,7 @@ class IngestionService:
         self,
         pdf_path: str,
         document_id: str,
+        source: str | None = None,
     ) -> int:
 
         # Load PDF
@@ -30,8 +33,11 @@ class IngestionService:
 
         cleaner = TextCleaner()
 
+        source_name = source or Path(pdf_path).name
+
         chunker = RecursiveChunker(
-            document_id=document_id
+            document_id=document_id,
+            source=source_name,
         )
 
         chunks = []
@@ -39,7 +45,10 @@ class IngestionService:
         for page in pages:
             cleaned_text = cleaner.clean(page.text)
 
-            page_chunks = chunker.split(cleaned_text)
+            page_chunks = chunker.split(
+                    cleaned_text,
+                    page_number=page.page_number,
+                )
 
             chunks.extend(page_chunks)
 

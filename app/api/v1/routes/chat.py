@@ -8,6 +8,9 @@ from app.schemas.chat import (
     ChatRequest,
     ChatResponse,
 )
+from fastapi import Depends
+
+from app.api.dependencies.auth import get_current_user
 
 
 router = APIRouter(
@@ -22,14 +25,23 @@ router = APIRouter(
 )
 def chat(
     request: ChatRequest,
+    current_user: dict = Depends(get_current_user),
 ):
 
-    answer = (
+    session = (
+        container.chat_memory_service
+        .create_session()
+    )
+
+    answer_payload = (
         container.rag_pipeline
         .ask(
-            request.question
+            session_id=session.id,
+            question=request.question,
         )
     )
+
+    answer = answer_payload["answer"]
 
     db = SessionLocal()
 

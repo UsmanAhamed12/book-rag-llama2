@@ -16,14 +16,20 @@ class OllamaClient:
         prompt: str,
     ) -> str:
 
-        response = ollama.chat(
-            model=self.model,
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt,
-                }
-            ],
-        )
+        try:
+            response = ollama.chat(
+                model=self.model,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    }
+                ],
+            )
 
-        return response["message"]["content"]
+            return response["message"]["content"]
+        except Exception:
+            return (
+                "I’m unable to reach the Ollama service right now, so I’m using a fallback response. "
+                "Please make sure Ollama is installed and running to get the full model-generated answer."
+            )

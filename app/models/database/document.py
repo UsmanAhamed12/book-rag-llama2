@@ -10,23 +10,42 @@ class DocumentDB(Base):
 
     __tablename__ = "documents"
 
-
     id: Mapped[int] = mapped_column(
         primary_key=True
     )
 
-
     filename: Mapped[str] = mapped_column(
-        String(255)
+        String(255),
+        nullable=False,
     )
 
+    file_size: Mapped[int] = mapped_column(
+        Integer,
+        default=0,
+    )
+
+    page_count: Mapped[int] = mapped_column(
+        Integer,
+        default=0,
+    )
 
     chunks: Mapped[int] = mapped_column(
-        Integer
+        Integer,
+        default=0,
     )
 
+    status: Mapped[str] = mapped_column(
+        String(50),
+        default="processing",
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
-        default=datetime.utcnow
+        default=datetime.utcnow,
+    )
+
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
     )
