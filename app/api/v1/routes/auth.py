@@ -1,21 +1,16 @@
 from fastapi import APIRouter, HTTPException
 
-from app.core.security import hash_password
+from app.core.security import (
+    create_access_token,
+    hash_password,
+    verify_password,
+)
 from app.db.postgres import SessionLocal
 from app.models.database.user import UserDB
 from app.schemas.auth import (
+    LoginRequest,
     RegisterRequest,
     RegisterResponse,
-)
-
-from fastapi import HTTPException
-
-from app.core.security import (
-    create_access_token,
-    verify_password,
-)
-from app.schemas.auth import (
-    LoginRequest,
     TokenResponse,
 )
 
@@ -32,13 +27,7 @@ def register(
     db = SessionLocal()
 
     try:
-        existing_user = (
-            db.query(UserDB)
-            .filter(
-                UserDB.email == request.email
-            )
-            .first()
-        )
+        existing_user = db.query(UserDB).filter(UserDB.email == request.email).first()
 
         if existing_user:
             raise HTTPException(
@@ -48,9 +37,7 @@ def register(
 
         user = UserDB(
             email=request.email,
-            password_hash=hash_password(
-                request.password
-            ),
+            password_hash=hash_password(request.password),
         )
 
         db.add(user)
@@ -77,14 +64,7 @@ def login(
     db = SessionLocal()
 
     try:
-
-        user = (
-            db.query(UserDB)
-            .filter(
-                UserDB.email == request.email
-            )
-            .first()
-        )
+        user = db.query(UserDB).filter(UserDB.email == request.email).first()
 
         if not user:
             raise HTTPException(

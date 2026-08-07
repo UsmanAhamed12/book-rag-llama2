@@ -6,13 +6,10 @@ from app.embeddings.sentence_transformer_provider import (
 from app.services.ingestion_service import IngestionService
 from app.vectorstores.chroma_store import ChromaVectorStore
 
-
 provider = SentenceTransformerProvider()
 
 
-embedding_service = EmbeddingService(
-    provider
-)
+embedding_service = EmbeddingService(provider)
 
 
 vector_store = ChromaVectorStore()
@@ -31,6 +28,4 @@ count = service.ingest(
 )
 
 
-print(
-    f"Indexed chunks: {count}"
-)
+print(f"Indexed chunks: {count}")

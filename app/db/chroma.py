@@ -13,6 +13,4 @@ def get_chroma_client():
         exist_ok=True,
     )
 
-    return chromadb.PersistentClient(
-        path=str(path)
-    )
+    return chromadb.PersistentClient(path=str(path))

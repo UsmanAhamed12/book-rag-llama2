@@ -1,18 +1,15 @@
 from datetime import datetime
 
-from sqlalchemy import String, Integer, DateTime
+from sqlalchemy import DateTime, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.postgres import Base
 
 
 class DocumentDB(Base):
-
     __tablename__ = "documents"
 
-    id: Mapped[int] = mapped_column(
-        primary_key=True
-    )
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     filename: Mapped[str] = mapped_column(
         String(255),

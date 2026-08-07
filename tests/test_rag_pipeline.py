@@ -10,7 +10,14 @@ class DummyRetriever:
                 (),
                 {
                     "text": "Data is information stored and processed.",
-                    "metadata": {"document_id": "doc-1", "chunk_index": 1, "page_number": 2},
+                    "score": 0.9,
+                    "document_id": "doc-1",
+                    "page_number": 2,
+                    "metadata": {
+                        "document_id": "doc-1",
+                        "chunk_index": 1,
+                        "page_number": 2,
+                    },
                 },
             )()
         ]
@@ -36,6 +43,11 @@ class DummyLLM:
         return "ok"
 
 
+class EmptyRetriever:
+    def search(self, query, top_k):
+        return []
+
+
 def test_build_prompt_returns_string_and_ask_passes_it_to_llm():
     pipeline = RAGPipeline(
         retriever=DummyRetriever(),
@@ -43,15 +55,25 @@ def test_build_prompt_returns_string_and_ask_passes_it_to_llm():
         memory=DummyMemory(),
     )
 
-    prompt = pipeline.build_prompt(session_id=1, question="What is data?")
+    prompt, results = pipeline.build_prompt(session_id=1, question="What is data?")
 
     assert isinstance(prompt, str)
+    assert len(results) == 1
     assert "What is data?" in prompt
     assert "Retrieved Context:" in prompt
 
     result = pipeline.ask(session_id=1, question="What is data?")
 
     assert result["answer"] == "ok"
+    assert result["sources"] == [
+        {
+            "reference": "S1",
+            "file_name": "doc-1",
+            "page_number": 2,
+            "chunk_number": 1,
+            "score": 0.9,
+        }
+    ]
     assert pipeline.llm.prompts[0] == prompt
 
 
@@ -67,3 +89,20 @@ def test_generate_returns_fallback_when_ollama_is_unavailable(monkeypatch):
     assert isinstance(response, str)
     assert response
     assert "fallback" in response.lower() or "data" in response.lower()
+
+
+def test_ask_does_not_generate_an_answer_without_relevant_context():
+    llm = DummyLLM()
+    pipeline = RAGPipeline(
+        retriever=EmptyRetriever(),
+        llm=llm,
+        memory=DummyMemory(),
+    )
+
+    result = pipeline.ask(session_id=1, question="What is not in this book?")
+
+    assert result == {
+        "answer": "I cannot find this information in the provided book context.",
+        "sources": [],
+    }
+    assert llm.prompts == []

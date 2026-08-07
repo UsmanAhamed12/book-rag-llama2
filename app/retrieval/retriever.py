@@ -1,59 +1,38 @@
-from app.embeddings.base import BaseEmbeddingProvider
 from app.db.chroma import get_chroma_client
+from app.embeddings.base import BaseEmbeddingProvider
 from app.retrieval.models import RetrievalResult
 
 
 class Retriever:
-
     def __init__(
         self,
         embedding_provider: BaseEmbeddingProvider,
         collection_name: str = "book_chunks",
     ) -> None:
 
-
         self.embedding_provider = embedding_provider
-
 
         client = get_chroma_client()
 
-
-        self.collection = client.get_or_create_collection(
-            name=collection_name
-        )
-
+        self.collection = client.get_or_create_collection(name=collection_name)
 
     def search(
         self,
         query: str,
         top_k: int = 10,
-        score_threshold: float = 0.80
+        score_threshold: float | None = None,
     ) -> list[RetrievalResult]:
 
-
-        query_embedding = (
-            self.embedding_provider
-            .embed([query])[0]
-        )
-
+        query_embedding = self.embedding_provider.embed([query])[0]
 
         results = self.collection.query(
-
-            query_embeddings=[
-                query_embedding
-            ],
-
+            query_embeddings=[query_embedding],
             n_results=top_k,
-
         )
 
-
-        documents = results["documents"][0]
-
-        distances = results["distances"][0]
-
-        metadatas = results["metadatas"][0]
-
+        documents = results.get("documents", [[]])[0]
+        distances = results.get("distances", [[]])[0]
+        metadatas = results.get("metadatas", [[]])[0]
 
         output: list[RetrievalResult] = []
 
@@ -61,6 +40,7 @@ class Retriever:
             documents,
             distances,
             metadatas,
+            strict=True,
         ):
             similarity = 1 / (1 + float(distance))
 
@@ -74,12 +54,13 @@ class Retriever:
                 )
             )
 
-        filtered = [
-            result
-            for result in output
-            if result.score <= score_threshold
-        ]
+        # Chroma returns smaller distances for closer matches.  The score above
+        # converts that into a similarity value, so the best results must be
+        # sorted highest-first.  The previous comparison retained the least
+        # similar chunks, which directly hurt answer accuracy.
+        if score_threshold is not None:
+            output = [result for result in output if result.score >= score_threshold]
 
-        filtered.sort(key=lambda x: x.score)
+        output.sort(key=lambda result: result.score, reverse=True)
 
-        return filtered
+        return output

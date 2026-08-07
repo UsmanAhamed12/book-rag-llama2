@@ -1,11 +1,10 @@
 from sqlalchemy.orm import Session
 
-from app.models.database.chat_session import ChatSessionDB
 from app.models.database.chat_message import ChatMessageDB
+from app.models.database.chat_session import ChatSessionDB
 
 
 class ChatMemoryService:
-
     def __init__(
         self,
         db: Session,
@@ -51,11 +50,7 @@ class ChatMemoryService:
 
         return (
             self.db.query(ChatMessageDB)
-            .filter(
-                ChatMessageDB.session_id == session_id
-            )
-            .order_by(
-                ChatMessageDB.id
-            )
+            .filter(ChatMessageDB.session_id == session_id)
+            .order_by(ChatMessageDB.id)
             .all()
         )

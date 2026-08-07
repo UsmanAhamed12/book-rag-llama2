@@ -3,7 +3,6 @@ from app.core.security import (
     verify_password,
 )
 
-
 password = "testpassword123"
 
 hashed = hash_password(password)

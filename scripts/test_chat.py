@@ -1,19 +1,15 @@
 from app.db.postgres import SessionLocal
-
 from app.embeddings.sentence_transformer_provider import (
     SentenceTransformerProvider,
 )
-
-from app.retrieval.retriever import Retriever
-from app.rag.pipeline import RAGPipeline
 from app.llm.service import LLMService
+from app.rag.pipeline import RAGPipeline
+from app.retrieval.retriever import Retriever
 from app.services.chat_memory_service import ChatMemoryService
-
 
 db = SessionLocal()
 
 try:
-
     # Chat memory
     memory = ChatMemoryService(db)
 
@@ -24,9 +20,7 @@ try:
     embedding = SentenceTransformerProvider()
 
     # Retriever
-    retriever = Retriever(
-        embedding
-    )
+    retriever = Retriever(embedding)
 
     # LLM
     llm = LLMService()
@@ -60,5 +54,4 @@ try:
     print(session.id)
 
 finally:
-
     db.close()

@@ -3,7 +3,6 @@ from dataclasses import dataclass
 
 @dataclass(slots=True)
 class ChunkMetadata:
-
     source: str
 
     page_number: int

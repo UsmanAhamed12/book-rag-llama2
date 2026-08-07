@@ -2,8 +2,8 @@ from app.embeddings.sentence_transformer_provider import (
     SentenceTransformerProvider,
 )
 from app.llm.service import LLMService
-from app.retrieval.retriever import Retriever
 from app.rag.pipeline import RAGPipeline
+from app.retrieval.retriever import Retriever
 
 embedding = SentenceTransformerProvider()
 
@@ -25,9 +25,7 @@ print(response["answer"])
 print("\nSources")
 
 for source in response["sources"]:
-    print(
-        f"Document: {source.document_id} | Page: {source.page_number}"
-    )
+    print(f"Document: {source.document_id} | Page: {source.page_number}")
 
 print("\nQuestion:")
 print(question)

@@ -1,9 +1,7 @@
 from pathlib import Path
-from uuid import uuid4
 
 import fitz
 
-from app.models.document import Document
 from app.models.page import Page
 
 # from app.ingestion.cleaners.text_cleaner import TextCleaner

@@ -1,16 +1,12 @@
 from app.embeddings.sentence_transformer_provider import (
     SentenceTransformerProvider,
 )
-
 from app.retrieval.retriever import Retriever
-
 
 provider = SentenceTransformerProvider()
 
 
-retriever = Retriever(
-    provider
-)
+retriever = Retriever(provider)
 
 
 results = retriever.search(
@@ -22,14 +18,8 @@ print(results)
 print(len(results))
 
 for result in results:
-
     print("=" * 50)
 
-    print(
-        result.text[:500]
-    )
+    print(result.text[:500])
 
-    print(
-        "Score:",
-        result.score
-    )
+    print("Score:", result.score)

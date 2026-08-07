@@ -21,10 +21,10 @@ class RecursiveChunker(BaseChunker):
         self.overlap = overlap
 
     def split(
-            self,
-            text: str,
-            page_number: int | None = None,
-        ) -> list[Chunk]:
+        self,
+        text: str,
+        page_number: int | None = None,
+    ) -> list[Chunk]:
         chunks: list[Chunk] = []
         page_number = 0 if page_number is None else page_number
 
@@ -43,12 +43,12 @@ class RecursiveChunker(BaseChunker):
                     chunk_index=index,
                     text=chunk_text,
                     metadata=ChunkMetadata(
-                            source=self.source,
-                            page_number=page_number,
-                            chunk_index=index,
-                            start_char=start,
-                            end_char=min(end, len(text)),
-                        ),
+                        source=self.source,
+                        page_number=page_number,
+                        chunk_index=index,
+                        start_char=start,
+                        end_char=min(end, len(text)),
+                    ),
                 )
             )
 

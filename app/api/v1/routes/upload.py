@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, File, UploadFile
 
 from app.core.container import container
@@ -5,7 +7,6 @@ from app.db.postgres import SessionLocal, ensure_schema
 from app.models.database.document import DocumentDB
 from app.schemas.upload import UploadResponse
 from app.services.upload_service import UploadService
-
 
 router = APIRouter()
 
@@ -15,7 +16,7 @@ router = APIRouter()
     response_model=UploadResponse,
 )
 def upload_pdf(
-    file: UploadFile = File(...),
+    file: Annotated[UploadFile, File(...)],
 ):
 
     ensure_schema()
@@ -25,12 +26,10 @@ def upload_pdf(
 
     pdf_path, file_size = upload_service.save(file)
 
-
     # Save document metadata to PostgreSQL
     db = SessionLocal()
 
     try:
-
         document = DocumentDB(
             filename=file.filename,
             file_size=file_size,
@@ -56,7 +55,6 @@ def upload_pdf(
 
         db.commit()
     except Exception:
-
         if "document" in locals():
             document.status = "failed"
             db.rollback()
@@ -65,9 +63,7 @@ def upload_pdf(
         raise
 
     finally:
-
         db.close()
-
 
     return UploadResponse(
         filename=file.filename,

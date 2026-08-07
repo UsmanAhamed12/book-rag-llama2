@@ -1,15 +1,18 @@
+from typing import Annotated
+
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import (
+    HTTPAuthorizationCredentials,
+    HTTPBearer,
+)
 
 from app.core.security import decode_access_token
 
-
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-
 oauth2_scheme = HTTPBearer()
 
+
 def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(oauth2_scheme),
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(oauth2_scheme)],
 ) -> dict:
 
     token = credentials.credentials
@@ -27,8 +30,8 @@ def get_current_user(
 
         return payload
 
-    except Exception:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",
-        )
+        ) from exc

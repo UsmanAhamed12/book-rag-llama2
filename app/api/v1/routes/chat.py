@@ -1,17 +1,12 @@
-from fastapi import APIRouter
+from typing import Annotated
 
+from fastapi import APIRouter, Depends
+
+from app.api.dependencies.auth import get_current_user
 from app.core.container import container
 from app.db.postgres import SessionLocal
 from app.models.database.chat import ChatHistory
-
-from app.schemas.chat import (
-    ChatRequest,
-    ChatResponse,
-)
-from fastapi import Depends
-
-from app.api.dependencies.auth import get_current_user
-
+from app.schemas.chat import ChatRequest, ChatResponse
 
 router = APIRouter(
     prefix="/chat",
@@ -25,20 +20,14 @@ router = APIRouter(
 )
 def chat(
     request: ChatRequest,
-    current_user: dict = Depends(get_current_user),
+    current_user: Annotated[dict, Depends(get_current_user)],
 ):
 
-    session = (
-        container.chat_memory_service
-        .create_session()
-    )
+    session = container.chat_memory_service.create_session()
 
-    answer_payload = (
-        container.rag_pipeline
-        .ask(
-            session_id=session.id,
-            question=request.question,
-        )
+    answer_payload = container.rag_pipeline.ask(
+        session_id=session.id,
+        question=request.question,
     )
 
     answer = answer_payload["answer"]
@@ -46,7 +35,6 @@ def chat(
     db = SessionLocal()
 
     try:
-
         history = ChatHistory(
             question=request.question,
             answer=answer,
@@ -57,10 +45,9 @@ def chat(
         db.commit()
 
     finally:
-
         db.close()
 
-
     return ChatResponse(
-        answer=answer
+        answer=answer,
+        sources=answer_payload["sources"],
     )

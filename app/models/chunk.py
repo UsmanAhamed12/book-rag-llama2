@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any
+
 from app.models.metadata import ChunkMetadata
 
 
