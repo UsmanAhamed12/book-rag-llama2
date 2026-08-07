@@ -1,38 +1,83 @@
-# Virtual Environment
-.venv/
-
-# Python
+# Python bytecode and native extensions
 __pycache__/
 *.py[cod]
+*$py.class
 *.so
-*.egg-info/
+*.pyd
 
-# Testing
+# Python environments
+.venv/
+venv/
+env/
+ENV/
+
+# Packaging and build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+pip-wheel-metadata/
+share/python-wheels/
+
+# Test, coverage, and quality-tool output
 .pytest_cache/
 .coverage
+.coverage.*
+coverage.xml
 htmlcov/
-
-# Ruff
 .ruff_cache/
-
-# MyPy
 .mypy_cache/
+.pyre/
+.pytype/
+.dmypy.json
+dmypy.json
 
-# IDE
+# Jupyter
+.ipynb_checkpoints/
+
+# Secrets and local environment configuration
+.env
+.env.*
+!.env.example
+!.env.template
+
+# Local databases and runtime data
+*.sqlite3
+*.db
+data/chroma/
+data/processed/*
+!data/processed/.gitkeep
+data/uploads/*
+!data/uploads/.gitkeep
+
+# Logs and temporary files
+logs/*
+!logs/.gitkeep
+tmp/
+temp/
+*.log
+
+# Streamlit local credentials
+.streamlit/secrets.toml
+.streamlit/credentials.toml
+
+# Frontend dependencies and local build output
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# IDE and editor files
 .vscode/
 .idea/
+*.code-workspace
+*.swp
+*.swo
+*~
 
-# macOS
+# Operating-system files
 .DS_Store
+Thumbs.db
 
-# Logs
-logs/*.log
-
-# Environment
-.env
-
-# Chroma Database
-data/chroma/
-
-# Python version
-.python-version
+# Local Docker Compose overrides
+docker-compose.override.yml

@@ -3,7 +3,7 @@ name = "book-rag-llama2"
 version = "0.1.0"
 description = "Production-ready RAG application using FastAPI, ChromaDB, Ollama, and React."
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.12,<3.13"
 dependencies = [
     "alembic>=1.19.0",
     "chromadb>=1.5.9",
@@ -48,6 +48,14 @@ indent-style = "space"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+filterwarnings = [
+    # ChromaDB 1.5.9 still calls asyncio.iscoroutinefunction, deprecated by Python 3.14.
+    "ignore:'asyncio.iscoroutinefunction' is deprecated and slated for removal in Python 3.16:DeprecationWarning:chromadb\\.telemetry\\.opentelemetry",
+    # PyMuPDF's SWIG bindings emit these Python 3.14 compatibility warnings.
+    "ignore:builtin type SwigPyPacked has no __module__ attribute:DeprecationWarning",
+    "ignore:builtin type SwigPyObject has no __module__ attribute:DeprecationWarning",
+    "ignore:builtin type swigvarlink has no __module__ attribute:DeprecationWarning",
+]
 
 [tool.mypy]
 python_version = "3.12"

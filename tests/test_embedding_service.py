@@ -1,13 +1,13 @@
 from app.embeddings.embedding_service import EmbeddingService
-from app.embeddings.sentence_transformer_provider import (
-    SentenceTransformerProvider,
-)
+
+
+class FakeEmbeddingProvider:
+    def embed(self, texts: list[str]) -> list[list[float]]:
+        return [[0.0] for _ in texts]
 
 
 def test_embedding_generation():
-    provider = SentenceTransformerProvider()
-
-    service = EmbeddingService(provider)
+    service = EmbeddingService(FakeEmbeddingProvider())
 
     vectors = service.embed_chunks([])
 
