@@ -23,7 +23,12 @@ def chat(
     current_user: Annotated[dict, Depends(get_current_user)],
 ):
 
-    session = container.chat_memory_service.create_session()
+    session = (
+    container.chat_memory_service
+    .create_session(
+        user_id=int(current_user["sub"])
+    )
+)
 
     answer_payload = container.rag_pipeline.ask(
         session_id=session.id,

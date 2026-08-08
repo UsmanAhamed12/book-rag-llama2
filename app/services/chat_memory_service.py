@@ -5,6 +5,7 @@ from app.models.database.chat_session import ChatSessionDB
 
 
 class ChatMemoryService:
+
     def __init__(
         self,
         db: Session,
@@ -14,9 +15,12 @@ class ChatMemoryService:
 
     def create_session(
         self,
+        user_id: int,
     ) -> ChatSessionDB:
 
-        session = ChatSessionDB()
+        session = ChatSessionDB(
+            user_id=user_id,
+        )
 
         self.db.add(session)
 
@@ -50,7 +54,9 @@ class ChatMemoryService:
 
         return (
             self.db.query(ChatMessageDB)
-            .filter(ChatMessageDB.session_id == session_id)
+            .filter(
+                ChatMessageDB.session_id == session_id
+            )
             .order_by(ChatMessageDB.id)
             .all()
         )
