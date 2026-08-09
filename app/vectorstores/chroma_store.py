@@ -10,12 +10,15 @@ class ChromaVectorStore:
 
         client = get_chroma_client()
 
-        self.collection = client.get_or_create_collection(name=collection_name)
+        self.collection = client.get_or_create_collection(
+            name=collection_name,
+        )
 
     def add(
         self,
         chunks: list[Chunk],
         embeddings: list[list[float]],
+        user_id: int,
     ) -> None:
 
         self.collection.add(
@@ -24,6 +27,7 @@ class ChromaVectorStore:
             embeddings=embeddings,
             metadatas=[
                 {
+                    "user_id": user_id,
                     "document_id": chunk.document_id,
                     "chunk_index": chunk.chunk_index,
                     "source": chunk.metadata.source,
@@ -34,3 +38,21 @@ class ChromaVectorStore:
                 for chunk in chunks
             ],
         )
+
+    def delete_by_document_id(
+        self,
+        document_id: str,
+    ) -> None:
+
+        results = self.collection.get(
+            where={
+                "document_id": document_id,
+            },
+        )
+
+        ids = results.get("ids", [])
+
+        if ids:
+            self.collection.delete(
+                ids=ids,
+            )

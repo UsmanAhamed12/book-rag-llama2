@@ -1,7 +1,9 @@
 from typing import Annotated
 
-from fastapi import APIRouter, File, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from pypdf import PdfReader
 
+from app.api.dependencies.auth import get_current_user
 from app.core.container import container
 from app.db.postgres import SessionLocal, ensure_schema
 from app.models.database.document import DocumentDB
@@ -17,23 +19,42 @@ router = APIRouter()
 )
 def upload_pdf(
     file: Annotated[UploadFile, File(...)],
+    current_user: Annotated[dict, Depends(get_current_user)],
 ):
+    user_id = int(current_user["sub"])
 
     ensure_schema()
 
     # Save PDF file
     upload_service = UploadService()
 
-    pdf_path, file_size = upload_service.save(file)
+    pdf_path, file_size, file_hash = upload_service.save(file)
+
+    reader = PdfReader(str(pdf_path))
+    page_count = len(reader.pages)
 
     # Save document metadata to PostgreSQL
     db = SessionLocal()
 
+    existing_document = (
+        db.query(DocumentDB).filter(DocumentDB.file_hash == file_hash).first()
+    )
+
+    if existing_document:
+        db.close()
+
+        raise HTTPException(
+            status_code=409,
+            detail="This PDF has already been uploaded.",
+        )
+
     try:
         document = DocumentDB(
+            user_id=user_id,
             filename=file.filename,
+            file_hash=file_hash,
             file_size=file_size,
-            page_count=0,
+            page_count=page_count,
             chunks=0,
             status="processing",
         )
@@ -45,19 +66,23 @@ def upload_pdf(
         db.refresh(document)
 
         chunks = container.ingestion_service.ingest(
-            str(pdf_path),
-            str(document.id),
-            str(pdf_path),
+            pdf_path=str(pdf_path),
+            document_id=str(document.id),
+            user_id=user_id,
+            source=str(pdf_path),
         )
 
         document.chunks = chunks
         document.status = "completed"
 
         db.commit()
+
     except Exception:
         if "document" in locals():
-            document.status = "failed"
             db.rollback()
+
+            document.status = "failed"
+
             db.commit()
 
         raise

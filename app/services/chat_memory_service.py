@@ -5,7 +5,6 @@ from app.models.database.chat_session import ChatSessionDB
 
 
 class ChatMemoryService:
-
     def __init__(
         self,
         db: Session,
@@ -54,9 +53,7 @@ class ChatMemoryService:
 
         return (
             self.db.query(ChatMessageDB)
-            .filter(
-                ChatMessageDB.session_id == session_id
-            )
+            .filter(ChatMessageDB.session_id == session_id)
             .order_by(ChatMessageDB.id)
             .all()
         )

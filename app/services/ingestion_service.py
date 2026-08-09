@@ -21,18 +21,16 @@ class IngestionService:
         self,
         pdf_path: str,
         document_id: str,
+        user_id: int,
         source: str | None = None,
     ) -> int:
 
-        # Load PDF
         loader = PDFLoader(pdf_path)
 
         pages = loader.load()
 
         cleaner = TextCleaner()
 
-        # Store a display-safe filename in vector metadata.  This is later
-        # returned to the chat client alongside the exact PDF page number.
         source_name = Path(source).name if source else Path(pdf_path).name
 
         chunker = RecursiveChunker(
@@ -52,13 +50,12 @@ class IngestionService:
 
             chunks.extend(page_chunks)
 
-        # Generate embeddings
         embeddings = self.embedding_service.embed_chunks(chunks)
 
-        # Store in Chroma
         self.vector_store.add(
             chunks,
             embeddings,
+            user_id=user_id,
         )
 
         return len(chunks)

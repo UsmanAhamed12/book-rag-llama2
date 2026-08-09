@@ -1,3 +1,4 @@
+import hashlib
 import shutil
 from pathlib import Path
 
@@ -13,6 +14,7 @@ class UploadService:
     ) -> None:
 
         self.upload_dir = Path(upload_dir)
+
         self.upload_dir.mkdir(
             parents=True,
             exist_ok=True,
@@ -21,7 +23,7 @@ class UploadService:
     def save(
         self,
         file: UploadFile,
-    ) -> tuple[Path, int]:
+    ) -> tuple[Path, int, str]:
 
         file_path = self.upload_dir / file.filename
 
@@ -33,4 +35,22 @@ class UploadService:
 
         file_size = file_path.stat().st_size
 
-        return file_path, file_size
+        file_hash = self.calculate_hash(file_path)
+
+        return file_path, file_size, file_hash
+
+    @staticmethod
+    def calculate_hash(
+        file_path: Path,
+    ) -> str:
+
+        sha256 = hashlib.sha256()
+
+        with file_path.open("rb") as file:
+            for chunk in iter(
+                lambda: file.read(1024 * 1024),
+                b"",
+            ):
+                sha256.update(chunk)
+
+        return sha256.hexdigest()
