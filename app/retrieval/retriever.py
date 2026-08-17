@@ -21,18 +21,36 @@ class Retriever:
         self,
         query: str,
         user_id: int,
+        document_ids: list[str] | None = None,
         top_k: int = 10,
         score_threshold: float | None = None,
     ) -> list[RetrievalResult]:
 
+        where_filter: dict = {
+        "user_id": user_id,
+    }
+
+        if document_ids:
+            where_filter = {
+                "$and": [
+                    {
+                        "user_id": user_id,
+                    },
+                    {
+                        "document_id": {
+                            "$in": document_ids,
+                        },
+                    },
+                ],
+            }
         query_embedding = self.embedding_provider.embed([query])[0]
+
+
 
         results = self.collection.query(
             query_embeddings=[query_embedding],
             n_results=top_k,
-            where={
-                "user_id": user_id,
-            },
+            where=where_filter,
         )
 
         documents = results.get("documents", [[]])[0]

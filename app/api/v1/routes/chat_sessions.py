@@ -7,6 +7,7 @@ from app.api.dependencies.auth import get_current_user
 from app.db.postgres import get_db
 from app.models.database.chat_message import ChatMessageDB
 from app.models.database.chat_session import ChatSessionDB
+from app.schemas.chat_session import ChatSessionUpdate
 from app.services.chat_memory_service import ChatMemoryService
 
 router = APIRouter(
@@ -36,7 +37,9 @@ def create_chat_session(
 
     return {
         "id": session.id,
+        "title": session.title,
         "created_at": session.created_at,
+        "updated_at": session.updated_at,
     }
 
 
@@ -61,12 +64,14 @@ def list_chat_sessions(
     )
 
     return [
-        {
-            "id": session.id,
-            "created_at": session.created_at,
-        }
-        for session in sessions
-    ]
+            {
+                "id": session.id,
+                "title": session.title,
+                "created_at": session.created_at,
+                "updated_at": session.updated_at,
+            }
+            for session in sessions
+        ]
 
 @router.get("/{session_id}")
 def get_chat_session(
@@ -99,7 +104,9 @@ def get_chat_session(
 
     return {
         "id": session.id,
+        "title": session.title,
         "created_at": session.created_at,
+        "updated_at": session.updated_at,
     }
 
 
@@ -144,7 +151,77 @@ def get_chat_messages(
             "id": message.id,
             "role": message.role,
             "message": message.message,
+            "sources": message.sources or [],
             "created_at": message.created_at,
         }
         for message in messages
     ]
+
+@router.patch("/{session_id}")
+def rename_chat_session(
+    session_id: int,
+    payload: ChatSessionUpdate,
+    current_user: Annotated[
+        dict,
+        Depends(get_current_user),
+    ],
+    db: Annotated[
+        Session,
+        Depends(get_db),
+    ],
+) -> dict:
+    user_id = int(current_user["sub"])
+
+    memory = ChatMemoryService(db)
+
+    session = memory.rename_session(
+        session_id=session_id,
+        user_id=user_id,
+        title=payload.title,
+    )
+
+    if session is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Chat session not found",
+        )
+
+    return {
+        "id": session.id,
+        "title": session.title,
+        "created_at": session.created_at,
+        "updated_at": session.updated_at,
+    }
+
+
+@router.delete("/{session_id}")
+def delete_chat_session(
+    session_id: int,
+    current_user: Annotated[
+        dict,
+        Depends(get_current_user),
+    ],
+    db: Annotated[
+        Session,
+        Depends(get_db),
+    ],
+) -> dict:
+    user_id = int(current_user["sub"])
+
+    memory = ChatMemoryService(db)
+
+    deleted = memory.delete_session(
+        session_id=session_id,
+        user_id=user_id,
+    )
+
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Chat session not found",
+        )
+
+    return {
+        "message": "Chat session deleted successfully",
+        "session_id": session_id,
+    }

@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 class ChatRequest(BaseModel):
     session_id: int
     question: str
+    document_ids: list[int] | None = None
 
 
 class SourceReference(BaseModel):

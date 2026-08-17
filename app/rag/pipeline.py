@@ -27,11 +27,36 @@ class RAGPipeline:
         question: str,
         memory: ChatMemoryService,
         top_k: int = 5,
+        document_ids: list[int] | None = None,
     ) -> tuple[str, list[RetrievalResult]]:
+        history = self.build_history(
+            session_id=session_id,
+            user_id=user_id,
+            memory=memory,
+        )
+
+        retrieval_history = self.build_retrieval_context(
+            session_id=session_id,
+            user_id=user_id,
+            memory=memory,
+        )
+
+        retrieval_query = self.llm.rewrite_query(
+            question=question,
+            history=retrieval_history,
+        )
 
         results = self.retriever.search(
-            question,
+            retrieval_query,
             user_id=user_id,
+            document_ids=(
+                [
+                    str(document_id)
+                    for document_id in document_ids
+                ]
+                if document_ids
+                else None
+            ),
             top_k=top_k,
         )
 
@@ -41,13 +66,7 @@ class RAGPipeline:
             if result.score >= self.minimum_context_score
         ]
 
-        history = self.build_history(
-            session_id=session_id,
-            user_id=user_id,
-            memory=memory,
-        )
-
-        context_parts = []
+        context_parts: list[str] = []
 
         for index, result in enumerate(
             grounded_results,
@@ -55,7 +74,9 @@ class RAGPipeline:
         ):
             metadata = result.metadata
 
-            source = self._source_name(result)
+            source = self._source_name(
+                result,
+            )
 
             page = metadata.get(
                 "page_number",
@@ -69,15 +90,16 @@ class RAGPipeline:
 
             context_parts.append(
                 f"""[S{index}] File: {source} | Page: {page} | Chunk: {chunk}
-<document_text>
-{result.text}
-</document_text>"""
+    <document_text>
+    {result.text}
+    </document_text>"""
             )
 
-        context = "\n\n".join(context_parts)
-
-        if not context:
-            context = "No relevant book context was found."
+        context = (
+            "\n\n".join(context_parts)
+            if context_parts
+            else "No relevant book context was found."
+        )
 
         prompt = SYSTEM_PROMPT.format(
             history=history,
@@ -87,26 +109,39 @@ class RAGPipeline:
 
         return prompt, grounded_results
 
+    def build_retrieval_context(
+        self,
+        session_id: int,
+        user_id: int,
+        memory: ChatMemoryService,
+    ) -> str:
+        messages = memory.get_messages(
+            session_id=session_id,
+            user_id=user_id,
+        )
+
+        user_messages = [
+            message.message
+            for message in messages
+            if message.role == "user"
+        ]
+
+        return "\n".join(user_messages[-3:])
+
     def ask(
         self,
         session_id: int,
         user_id: int,
         question: str,
         memory: ChatMemoryService,
+        document_ids: list[int] | None = None,
     ) -> dict:
-        
-        memory.save_message(
-            session_id=session_id,
-            user_id=user_id,
-            role="user",
-            message=question,
-        )
-
         prompt, results = self.build_prompt(
             session_id=session_id,
             user_id=user_id,
             question=question,
             memory=memory,
+            document_ids=document_ids,
         )
 
         answer = (
@@ -115,16 +150,26 @@ class RAGPipeline:
             else "I cannot find this information in the provided book context."
         )
 
+        sources = self._build_sources(results)
+
+        memory.save_message(
+            session_id=session_id,
+            user_id=user_id,
+            role="user",
+            message=question,
+        )
+
         memory.save_message(
             session_id=session_id,
             user_id=user_id,
             role="assistant",
             message=answer,
+            sources=sources,
         )
 
         return {
             "answer": answer,
-            "sources": self._build_sources(results),
+            "sources": sources,
         }
 
     @staticmethod

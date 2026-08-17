@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey
+from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.postgres import Base
@@ -9,7 +9,9 @@ from app.db.postgres import Base
 class ChatSessionDB(Base):
     __tablename__ = "chat_sessions"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(
+        primary_key=True,
+    )
 
     user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id"),
@@ -17,7 +19,19 @@ class ChatSessionDB(Base):
         index=True,
     )
 
+    title: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+        default="New Chat",
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=datetime.utcnow,
+    )
+
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
     )

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy.orm import Session
 
 from app.models.database.chat_message import ChatMessageDB
@@ -18,6 +20,7 @@ class ChatMemoryService:
 
         session = ChatSessionDB(
             user_id=user_id,
+            title="New Chat",
         )
 
         self.db.add(session)
@@ -47,6 +50,7 @@ class ChatMemoryService:
         user_id: int,
         role: str,
         message: str,
+        sources: list[dict] | None = None,
     ) -> None:
 
         session = self.get_session(
@@ -61,6 +65,7 @@ class ChatMemoryService:
             session_id=session_id,
             role=role,
             message=message,
+            sources=sources,
         )
 
         self.db.add(chat)
@@ -88,3 +93,52 @@ class ChatMemoryService:
             .order_by(ChatMessageDB.id)
             .all()
         )
+
+    def rename_session(
+        self,
+        session_id: int,
+        user_id: int,
+        title: str,
+    ) -> ChatSessionDB | None:
+        session = self.get_session(
+            session_id=session_id,
+            user_id=user_id,
+        )
+
+        if session is None:
+            return None
+
+        session.title = title.strip()
+        session.updated_at = datetime.utcnow()
+
+        self.db.commit()
+        self.db.refresh(session)
+
+        return session
+
+
+    def delete_session(
+        self,
+        session_id: int,
+        user_id: int,
+    ) -> bool:
+        session = self.get_session(
+            session_id=session_id,
+            user_id=user_id,
+        )
+
+        if session is None:
+            return False
+
+        (
+            self.db.query(ChatMessageDB)
+            .filter(
+                ChatMessageDB.session_id == session_id,
+            )
+            .delete()
+        )
+
+        self.db.delete(session)
+        self.db.commit()
+
+        return True

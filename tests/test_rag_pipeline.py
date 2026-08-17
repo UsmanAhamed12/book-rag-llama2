@@ -4,7 +4,7 @@ from app.rag.pipeline import RAGPipeline
 
 
 class DummyRetriever:
-    def search(self, query, user_id, top_k):
+    def search(self, query, user_id, top_k, document_ids=None):
         return [
             type(
                 "Result",
@@ -34,14 +34,16 @@ class DummyMemory:
         user_id,
         role,
         message,
+        sources=None,
     ):
         self.saved.append(
-            (
-                session_id,
-                user_id,
-                role,
-                message,
-            )
+            {
+                "session_id": session_id,
+                "user_id": user_id,
+                "role": role,
+                "message": message,
+                "sources": sources,
+            }
         )
 
     def get_messages(
@@ -60,9 +62,16 @@ class DummyLLM:
         self.prompts.append(prompt)
         return "ok"
 
+    def rewrite_query(
+        self,
+        question,
+        history,
+    ):
+        return question
+
 
 class EmptyRetriever:
-    def search(self, query, user_id, top_k):
+    def search(self, query, user_id, top_k, document_ids=None):
         return []
 
 

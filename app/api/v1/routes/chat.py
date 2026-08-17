@@ -62,6 +62,7 @@ def chat(
         user_id=user_id,
         question=request.question,
         memory=memory,
+        document_ids=request.document_ids,
     )
 
     return ChatResponse(
