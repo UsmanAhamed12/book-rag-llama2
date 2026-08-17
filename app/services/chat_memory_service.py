@@ -9,7 +9,6 @@ class ChatMemoryService:
         self,
         db: Session,
     ) -> None:
-
         self.db = db
 
     def create_session(
@@ -22,19 +21,41 @@ class ChatMemoryService:
         )
 
         self.db.add(session)
-
         self.db.commit()
-
         self.db.refresh(session)
 
         return session
 
+    def get_session(
+        self,
+        session_id: int,
+        user_id: int,
+    ) -> ChatSessionDB | None:
+
+        return (
+            self.db.query(ChatSessionDB)
+            .filter(
+                ChatSessionDB.id == session_id,
+                ChatSessionDB.user_id == user_id,
+            )
+            .first()
+        )
+
     def save_message(
         self,
         session_id: int,
+        user_id: int,
         role: str,
         message: str,
     ) -> None:
+
+        session = self.get_session(
+            session_id=session_id,
+            user_id=user_id,
+        )
+
+        if session is None:
+            raise ValueError("Chat session not found.")
 
         chat = ChatMessageDB(
             session_id=session_id,
@@ -43,17 +64,27 @@ class ChatMemoryService:
         )
 
         self.db.add(chat)
-
         self.db.commit()
 
     def get_messages(
         self,
         session_id: int,
+        user_id: int,
     ) -> list[ChatMessageDB]:
+
+        session = self.get_session(
+            session_id=session_id,
+            user_id=user_id,
+        )
+
+        if session is None:
+            raise ValueError("Chat session not found.")
 
         return (
             self.db.query(ChatMessageDB)
-            .filter(ChatMessageDB.session_id == session_id)
+            .filter(
+                ChatMessageDB.session_id == session_id,
+            )
             .order_by(ChatMessageDB.id)
             .all()
         )

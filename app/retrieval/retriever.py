@@ -9,16 +9,18 @@ class Retriever:
         embedding_provider: BaseEmbeddingProvider,
         collection_name: str = "book_chunks",
     ) -> None:
-
         self.embedding_provider = embedding_provider
 
         client = get_chroma_client()
 
-        self.collection = client.get_or_create_collection(name=collection_name)
+        self.collection = client.get_or_create_collection(
+            name=collection_name,
+        )
 
     def search(
         self,
         query: str,
+        user_id: int,
         top_k: int = 10,
         score_threshold: float | None = None,
     ) -> list[RetrievalResult]:
@@ -28,6 +30,9 @@ class Retriever:
         results = self.collection.query(
             query_embeddings=[query_embedding],
             n_results=top_k,
+            where={
+                "user_id": user_id,
+            },
         )
 
         documents = results.get("documents", [[]])[0]
@@ -54,13 +59,17 @@ class Retriever:
                 )
             )
 
-        # Chroma returns smaller distances for closer matches.  The score above
-        # converts that into a similarity value, so the best results must be
-        # sorted highest-first.  The previous comparison retained the least
-        # similar chunks, which directly hurt answer accuracy.
         if score_threshold is not None:
-            output = [result for result in output if result.score >= score_threshold]
+            output = [
+                result
+                for result in output
+                if result.score >= score_threshold
+            ]
 
-        output.sort(key=lambda result: result.score, reverse=True)
+        output.sort(
+            key=lambda result: result.score,
+            reverse=True,
+        )
 
         return output
+

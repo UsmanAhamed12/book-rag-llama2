@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from app.api.v1.routes import auth as auth_router
 from app.api.v1.routes import chat as chat_router
+from app.api.v1.routes import chat_sessions as chat_sessions_router
 from app.api.v1.routes import documents as documents_router
 from app.api.v1.routes import upload as upload_router
 
@@ -9,9 +10,13 @@ api_router = APIRouter(prefix="")
 
 api_router.include_router(
     chat_router.router,
-    prefix="/chat",
     tags=["Chat"],
 )
+
+api_router.include_router(
+    chat_sessions_router.router,
+)
+
 
 api_router.include_router(
     upload_router.router,
@@ -35,3 +40,5 @@ api_router.include_router(
     prefix="/auth",
     tags=["Authentication"],
 )
+
+

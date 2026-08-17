@@ -1,18 +1,12 @@
 from logging.config import fileConfig
 
-from alembic import context
 from sqlalchemy import engine_from_config, pool
 
+from alembic import context
 from app.core.settings import settings
 from app.db.postgres import Base
 
 # Import all models so SQLAlchemy metadata knows about them.
-from app.models.database.chat import ChatHistory
-from app.models.database.chat_message import ChatMessageDB
-from app.models.database.chat_session import ChatSessionDB
-from app.models.database.document import DocumentDB
-from app.models.database.user import UserDB
-
 
 config = context.config
 

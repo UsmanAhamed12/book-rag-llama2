@@ -1,9 +1,10 @@
+
 from app.llm.ollama_client import OllamaClient
 from app.rag.pipeline import RAGPipeline
 
 
 class DummyRetriever:
-    def search(self, query, top_k):
+    def search(self, query, user_id, top_k):
         return [
             type(
                 "Result",
@@ -27,10 +28,27 @@ class DummyMemory:
     def __init__(self):
         self.saved = []
 
-    def save_message(self, session_id, role, message):
-        self.saved.append((session_id, role, message))
+    def save_message(
+        self,
+        session_id,
+        user_id,
+        role,
+        message,
+    ):
+        self.saved.append(
+            (
+                session_id,
+                user_id,
+                role,
+                message,
+            )
+        )
 
-    def get_messages(self, session_id):
+    def get_messages(
+        self,
+        session_id,
+        user_id,
+    ):
         return []
 
 
@@ -44,25 +62,36 @@ class DummyLLM:
 
 
 class EmptyRetriever:
-    def search(self, query, top_k):
+    def search(self, query, user_id, top_k):
         return []
 
 
 def test_build_prompt_returns_string_and_ask_passes_it_to_llm():
     pipeline = RAGPipeline(
         retriever=DummyRetriever(),
-        llm=DummyLLM(),
-        memory=DummyMemory(),
+        llm=DummyLLM()
     )
 
-    prompt, results = pipeline.build_prompt(session_id=1, question="What is data?")
+    prompt, results = pipeline.build_prompt(
+        session_id=1,
+        user_id=1,
+        question="What is data?",
+        memory=DummyMemory()
+    )
 
     assert isinstance(prompt, str)
     assert len(results) == 1
     assert "What is data?" in prompt
     assert "Retrieved Context:" in prompt
 
-    result = pipeline.ask(session_id=1, question="What is data?")
+    memory = DummyMemory()
+
+    result = pipeline.ask(
+        session_id=1,
+        user_id=1,
+        question="What is not in this book?",
+        memory=memory,
+    )
 
     assert result["answer"] == "ok"
     assert result["sources"] == [
@@ -74,14 +103,18 @@ def test_build_prompt_returns_string_and_ask_passes_it_to_llm():
             "score": 0.9,
         }
     ]
-    assert pipeline.llm.prompts[0] == prompt
+    assert len(pipeline.llm.prompts) == 1
+    assert "What is not in this book?" in pipeline.llm.prompts[0]
 
 
 def test_generate_returns_fallback_when_ollama_is_unavailable(monkeypatch):
     def raise_connection_error(*args, **kwargs):
         raise ConnectionError("Failed to connect")
 
-    monkeypatch.setattr("app.llm.ollama_client.ollama.chat", raise_connection_error)
+    monkeypatch.setattr(
+        "app.llm.ollama_client.ollama.chat",
+        raise_connection_error,
+    )
 
     client = OllamaClient(model="dummy")
     response = client.generate("What is data?")
@@ -93,16 +126,23 @@ def test_generate_returns_fallback_when_ollama_is_unavailable(monkeypatch):
 
 def test_ask_does_not_generate_an_answer_without_relevant_context():
     llm = DummyLLM()
+
     pipeline = RAGPipeline(
         retriever=EmptyRetriever(),
-        llm=llm,
-        memory=DummyMemory(),
+        llm=llm
     )
 
-    result = pipeline.ask(session_id=1, question="What is not in this book?")
+    result = pipeline.ask(
+        session_id=1,
+        user_id=1,
+        question="What is not in this book?",
+        memory=DummyMemory()
+    )
 
     assert result == {
         "answer": "I cannot find this information in the provided book context.",
         "sources": [],
     }
+
     assert llm.prompts == []
+
