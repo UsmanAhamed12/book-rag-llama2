@@ -46,19 +46,36 @@ class RAGPipeline:
             history=retrieval_history,
         )
 
-        results = self.retriever.search(
-            retrieval_query,
-            user_id=user_id,
-            document_ids=(
-                [
-                    str(document_id)
-                    for document_id in document_ids
-                ]
-                if document_ids
-                else None
-            ),
-            top_k=top_k,
+        document_id_strings = (
+            [
+                str(document_id)
+                for document_id in document_ids
+            ]
+            if document_ids
+            else None
         )
+
+        if (
+            document_id_strings
+            and self.is_multi_document_summary(
+                question,
+                document_ids,
+            )
+        ):
+            results = self.retriever.search_for_summary(
+                query=retrieval_query,
+                user_id=user_id,
+                document_ids=document_id_strings,
+                semantic_k=4,
+                representative_k=6,
+            )
+        else:
+            results = self.retriever.search(
+                retrieval_query,
+                user_id=user_id,
+                document_ids=document_id_strings,
+                top_k=top_k,
+            )
 
         grounded_results = [
             result
@@ -150,14 +167,14 @@ class RAGPipeline:
             else "I cannot find this information in the provided book context."
         )
 
-        sources = self._build_sources(results)
-
         memory.save_message(
             session_id=session_id,
             user_id=user_id,
             role="user",
             message=question,
         )
+
+        sources = self._build_sources(results)
 
         memory.save_message(
             session_id=session_id,
@@ -242,6 +259,32 @@ class RAGPipeline:
 
         return sources
 
+    @staticmethod
+    def is_multi_document_summary(
+        question: str,
+        document_ids: list[int] | None,
+    ) -> bool:
+        if not document_ids or len(document_ids) < 2:
+            return False
+
+        normalized = question.lower()
+
+        summary_terms = (
+            "summarize",
+            "summary",
+            "both books",
+            "both documents",
+            "each book",
+            "each document",
+            "separately",
+            "compare",
+        )
+
+        return any(
+            term in normalized
+            for term in summary_terms
+        )
+
     def build_history(
         self,
         session_id: int,
@@ -257,4 +300,29 @@ class RAGPipeline:
         return "\n".join(
             f"{message.role}: {message.message}"
             for message in messages
+        )
+
+    @staticmethod
+    def is_document_summary_request(
+        question: str,
+    ) -> bool:
+        normalized = question.lower()
+
+        terms = (
+            "summarize",
+            "summary",
+            "summarise",
+            "overview",
+            "all books",
+            "all documents",
+            "both books",
+            "both documents",
+            "each book",
+            "each document",
+            "separately",
+        )
+
+        return any(
+            term in normalized
+            for term in terms
         )

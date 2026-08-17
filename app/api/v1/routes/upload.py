@@ -74,6 +74,25 @@ def upload_pdf(
 
         document.chunks = chunks
         document.status = "completed"
+        document.summary_status = "processing"
+
+        db.commit()
+
+        try:
+            summary, topics = (
+                container.document_profile_service.build_profile(
+                    user_id=user_id,
+                    document_id=str(document.id),
+                    filename=document.filename,
+                )
+            )
+
+            document.summary = summary
+            document.topics = topics
+            document.summary_status = "completed"
+
+        except Exception:
+            document.summary_status = "failed"
 
         db.commit()
 

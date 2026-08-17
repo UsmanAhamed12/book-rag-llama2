@@ -1,4 +1,5 @@
 from app.llm.ollama_client import OllamaClient
+from app.rag.document_summary_prompt import DOCUMENT_SUMMARY_PROMPT
 from app.rag.query_rewriter import QUERY_REWRITE_PROMPT
 
 
@@ -30,3 +31,15 @@ class LLMService:
         )
 
         return rewritten or question.strip()
+
+    def summarize_document_profiles(
+        self,
+        question: str,
+        profiles: str,
+    ) -> str:
+        prompt = DOCUMENT_SUMMARY_PROMPT.format(
+            profiles=profiles,
+            question=question,
+        )
+
+        return self.client.generate(prompt)

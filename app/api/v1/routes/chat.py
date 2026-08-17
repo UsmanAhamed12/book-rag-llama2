@@ -31,7 +31,6 @@ def chat(
         Depends(get_db),
     ],
 ) -> ChatResponse:
-
     user_id = int(current_user["sub"])
 
     memory = ChatMemoryService(db)
@@ -47,16 +46,86 @@ def chat(
             detail="Chat session not found.",
         )
 
-    # rag_pipeline = RAGPipeline(
-    #     retriever=container.retriever,
-    #     llm=container.llm,
-    # )
-
     rag_pipeline = RAGPipeline(
         retriever=container.retriever,
         llm=container.llm,
     )
 
+    # ---------------------------------------------------------
+    # Document-profile summary path
+    # ---------------------------------------------------------
+    if (
+        request.document_ids
+        and rag_pipeline.is_document_summary_request(
+            request.question,
+        )
+    ):
+        documents = container.document_service.get_by_ids(
+            db=db,
+            user_id=user_id,
+            document_ids=request.document_ids,
+        )
+
+        if not documents:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No selected documents were found.",
+            )
+
+        profile_parts: list[str] = []
+
+        for document in documents:
+            topics = ", ".join(
+                document.topics or [],
+            )
+
+            summary = (
+                document.summary
+                or "No stored summary is available for this document."
+            )
+
+            profile_parts.append(
+                
+                    f"Filename: {document.filename}\n\n"
+                    f"Summary:\n{summary}\n\n"
+                    f"Topics:\n{topics or 'No topics available.'}"
+                
+            )
+
+        profiles = "\n\n---\n\n".join(
+            profile_parts,
+        )
+
+        answer = (
+            container.llm.summarize_document_profiles(
+                question=request.question,
+                profiles=profiles,
+            )
+        )
+
+        memory.save_message(
+            session_id=request.session_id,
+            user_id=user_id,
+            role="user",
+            message=request.question,
+        )
+
+        memory.save_message(
+            session_id=request.session_id,
+            user_id=user_id,
+            role="assistant",
+            message=answer,
+            sources=[],
+        )
+
+        return ChatResponse(
+            answer=answer,
+            sources=[],
+        )
+
+    # ---------------------------------------------------------
+    # Normal RAG path
+    # ---------------------------------------------------------
     answer_payload = rag_pipeline.ask(
         session_id=request.session_id,
         user_id=user_id,

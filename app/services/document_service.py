@@ -66,3 +66,22 @@ class DocumentService:
 
         return document
 
+    def get_by_ids(
+        self,
+        db: Session,
+        user_id: int,
+        document_ids: list[int],
+    ) -> list[DocumentDB]:
+        if not document_ids:
+            return []
+
+        return (
+            db.query(DocumentDB)
+            .filter(
+                DocumentDB.user_id == user_id,
+                DocumentDB.id.in_(document_ids),
+            )
+            .order_by(DocumentDB.id.asc())
+            .all()
+        )
+
