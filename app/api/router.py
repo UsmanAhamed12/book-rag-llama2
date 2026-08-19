@@ -40,5 +40,3 @@ api_router.include_router(
     prefix="/auth",
     tags=["Authentication"],
 )
-
-

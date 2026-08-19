@@ -1,3 +1,5 @@
+from typing import TypedDict
+
 from fastapi import APIRouter
 
 router = APIRouter(
@@ -6,6 +8,10 @@ router = APIRouter(
 )
 
 
+class MessageResponse(TypedDict):
+    message: str
+
+
 @router.post("/")
-async def ask_question():
+async def ask_question() -> MessageResponse:
     return {"message": "Coming soon"}

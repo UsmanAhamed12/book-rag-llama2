@@ -23,7 +23,7 @@ router = APIRouter()
 )
 def register(
     request: RegisterRequest,
-):
+) -> RegisterResponse:
     db = SessionLocal()
 
     try:
@@ -59,7 +59,7 @@ def register(
 )
 def login(
     request: LoginRequest,
-):
+) -> TokenResponse:
 
     db = SessionLocal()
 

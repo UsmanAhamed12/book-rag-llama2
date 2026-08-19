@@ -32,11 +32,7 @@ class DocumentProfileService:
             )
 
         context = "\n\n".join(
-            (
-                f"Page {result.page_number}:\n"
-                f"{result.text}"
-            )
-            for result in chunks
+            (f"Page {result.page_number}:\n{result.text}") for result in chunks
         )
 
         prompt = f"""
@@ -86,11 +82,9 @@ Rules:
                 [],
             )
 
-            topics = [
-                str(topic).strip()
-                for topic in raw_topics
-                if str(topic).strip()
-            ][:8]
+            topics = [str(topic).strip() for topic in raw_topics if str(topic).strip()][
+                :8
+            ]
 
             if not summary:
                 raise ValueError(

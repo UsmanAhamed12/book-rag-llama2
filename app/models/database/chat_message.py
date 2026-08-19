@@ -1,16 +1,8 @@
 from datetime import datetime
+from typing import Any
 
-from sqlalchemy import (
-    JSON,
-    DateTime,
-    ForeignKey,
-    String,
-    Text,
-)
-from sqlalchemy.orm import (
-    Mapped,
-    mapped_column,
-)
+from sqlalchemy import JSON, DateTime, ForeignKey, String, Text
+from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.postgres import Base
 
@@ -18,9 +10,7 @@ from app.db.postgres import Base
 class ChatMessageDB(Base):
     __tablename__ = "chat_messages"
 
-    id: Mapped[int] = mapped_column(
-        primary_key=True,
-    )
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     session_id: Mapped[int] = mapped_column(
         ForeignKey("chat_sessions.id"),
@@ -37,7 +27,7 @@ class ChatMessageDB(Base):
         nullable=False,
     )
 
-    sources: Mapped[list[dict] | None] = mapped_column(
+    sources: Mapped[list[dict[str, Any]] | None] = mapped_column(
         JSON,
         nullable=True,
     )

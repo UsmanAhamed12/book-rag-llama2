@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy.orm import Session
 
@@ -50,7 +51,7 @@ class ChatMemoryService:
         user_id: int,
         role: str,
         message: str,
-        sources: list[dict] | None = None,
+        sources: list[dict[str, Any]] | None = None,
     ) -> None:
 
         session = self.get_session(
@@ -115,7 +116,6 @@ class ChatMemoryService:
         self.db.refresh(session)
 
         return session
-
 
     def delete_session(
         self,

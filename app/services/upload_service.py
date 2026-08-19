@@ -25,7 +25,8 @@ class UploadService:
         file: UploadFile,
     ) -> tuple[Path, int, str]:
 
-        file_path = self.upload_dir / file.filename
+        filename = file.filename or "uploaded.pdf"
+        file_path = self.upload_dir / filename
 
         with file_path.open("wb") as buffer:
             shutil.copyfileobj(

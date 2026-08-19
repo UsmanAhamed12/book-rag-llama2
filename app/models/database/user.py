@@ -14,7 +14,7 @@ class UserDB(Base):
         email: str,
         password_hash: str | None = None,
         hashed_password: str | None = None,
-        **kwargs,
+        **kwargs: object,
     ) -> None:
         kwargs.setdefault("email", email)
 
@@ -23,7 +23,7 @@ class UserDB(Base):
         elif hashed_password is not None:
             kwargs["hashed_password"] = hashed_password
 
-        super().__init__(**kwargs)
+        super().__init__()
 
     id: Mapped[int] = mapped_column(primary_key=True)
 

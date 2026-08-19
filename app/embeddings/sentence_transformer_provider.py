@@ -1,3 +1,7 @@
+# app/embeddings/sentence_transformer_provider.py
+
+from typing import cast
+
 from sentence_transformers import SentenceTransformer
 
 from app.embeddings.base import BaseEmbeddingProvider
@@ -21,4 +25,7 @@ class SentenceTransformerProvider(BaseEmbeddingProvider):
             normalize_embeddings=True,
         )
 
-        return embeddings.tolist()
+        return cast(
+            list[list[float]],
+            embeddings.tolist(),
+        )

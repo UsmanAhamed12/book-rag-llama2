@@ -1,5 +1,7 @@
+from collections.abc import Generator
+
 from sqlalchemy import create_engine, inspect, text
-from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 from app.core.settings import settings
 
@@ -77,12 +79,10 @@ def ensure_schema() -> None:
             )
 
 
-def get_db():
-
+def get_db() -> Generator[Session, None, None]:
     db = SessionLocal()
 
     try:
         yield db
-
     finally:
         db.close()

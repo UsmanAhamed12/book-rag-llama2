@@ -32,10 +32,10 @@ def test_retriever_returns_best_similarity_first(monkeypatch):
     retriever = Retriever(DummyEmbeddingProvider())
 
     results = retriever.search(
-    "query",
-    user_id=1,
-    top_k=2,
-)
+        "query",
+        user_id=1,
+        top_k=2,
+    )
 
     assert [result.text for result in results] == ["closest", "farthest"]
     assert results[0].score > results[1].score

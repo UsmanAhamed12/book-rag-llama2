@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import TypedDict
 
 from app.llm.service import LLMService
 from app.rag.prompt import SYSTEM_PROMPT
@@ -7,16 +8,17 @@ from app.retrieval.retriever import Retriever
 from app.services.chat_memory_service import ChatMemoryService
 
 
+class RAGAnswerPayload(TypedDict):
+    answer: str
+    sources: list[dict[str, str | int | float]]
+
+
 class RAGPipeline:
     """Build grounded answers from the most relevant book chunks."""
 
     minimum_context_score = 0.35
 
-    def __init__(
-        self,
-        retriever: Retriever,
-        llm: LLMService
-    ) -> None:
+    def __init__(self, retriever: Retriever, llm: LLMService) -> None:
         self.retriever = retriever
         self.llm = llm
 
@@ -47,20 +49,12 @@ class RAGPipeline:
         )
 
         document_id_strings = (
-            [
-                str(document_id)
-                for document_id in document_ids
-            ]
-            if document_ids
-            else None
+            [str(document_id) for document_id in document_ids] if document_ids else None
         )
 
-        if (
-            document_id_strings
-            and self.is_multi_document_summary(
-                question,
-                document_ids,
-            )
+        if document_id_strings and self.is_multi_document_summary(
+            question,
+            document_ids,
         ):
             results = self.retriever.search_for_summary(
                 query=retrieval_query,
@@ -78,9 +72,7 @@ class RAGPipeline:
             )
 
         grounded_results = [
-            result
-            for result in results
-            if result.score >= self.minimum_context_score
+            result for result in results if result.score >= self.minimum_context_score
         ]
 
         context_parts: list[str] = []
@@ -138,9 +130,7 @@ class RAGPipeline:
         )
 
         user_messages = [
-            message.message
-            for message in messages
-            if message.role == "user"
+            message.message for message in messages if message.role == "user"
         ]
 
         return "\n".join(user_messages[-3:])
@@ -152,7 +142,7 @@ class RAGPipeline:
         question: str,
         memory: ChatMemoryService,
         document_ids: list[int] | None = None,
-    ) -> dict:
+    ) -> RAGAnswerPayload:
         prompt, results = self.build_prompt(
             session_id=session_id,
             user_id=user_id,
@@ -204,10 +194,10 @@ class RAGPipeline:
     def _build_sources(
         cls,
         results: list[RetrievalResult],
-    ) -> list[dict]:
+    ) -> list[dict[str, str | int | float]]:
         """Return only citations for chunks supplied to the LLM."""
 
-        sources: list[dict] = []
+        sources: list[dict[str, str | int | float]] = []
 
         seen: set[tuple[str, int, int]] = set()
 
@@ -280,10 +270,7 @@ class RAGPipeline:
             "compare",
         )
 
-        return any(
-            term in normalized
-            for term in summary_terms
-        )
+        return any(term in normalized for term in summary_terms)
 
     def build_history(
         self,
@@ -297,10 +284,7 @@ class RAGPipeline:
             user_id=user_id,
         )[-8:]
 
-        return "\n".join(
-            f"{message.role}: {message.message}"
-            for message in messages
-        )
+        return "\n".join(f"{message.role}: {message.message}" for message in messages)
 
     @staticmethod
     def is_document_summary_request(
@@ -322,7 +306,4 @@ class RAGPipeline:
             "separately",
         )
 
-        return any(
-            term in normalized
-            for term in terms
-        )
+        return any(term in normalized for term in terms)

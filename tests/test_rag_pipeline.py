@@ -1,4 +1,3 @@
-
 from app.llm.ollama_client import OllamaClient
 from app.rag.pipeline import RAGPipeline
 
@@ -76,16 +75,10 @@ class EmptyRetriever:
 
 
 def test_build_prompt_returns_string_and_ask_passes_it_to_llm():
-    pipeline = RAGPipeline(
-        retriever=DummyRetriever(),
-        llm=DummyLLM()
-    )
+    pipeline = RAGPipeline(retriever=DummyRetriever(), llm=DummyLLM())
 
     prompt, results = pipeline.build_prompt(
-        session_id=1,
-        user_id=1,
-        question="What is data?",
-        memory=DummyMemory()
+        session_id=1, user_id=1, question="What is data?", memory=DummyMemory()
     )
 
     assert isinstance(prompt, str)
@@ -136,16 +129,13 @@ def test_generate_returns_fallback_when_ollama_is_unavailable(monkeypatch):
 def test_ask_does_not_generate_an_answer_without_relevant_context():
     llm = DummyLLM()
 
-    pipeline = RAGPipeline(
-        retriever=EmptyRetriever(),
-        llm=llm
-    )
+    pipeline = RAGPipeline(retriever=EmptyRetriever(), llm=llm)
 
     result = pipeline.ask(
         session_id=1,
         user_id=1,
         question="What is not in this book?",
-        memory=DummyMemory()
+        memory=DummyMemory(),
     )
 
     assert result == {
@@ -154,4 +144,3 @@ def test_ask_does_not_generate_an_answer_without_relevant_context():
     }
 
     assert llm.prompts == []
-

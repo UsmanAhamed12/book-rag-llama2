@@ -1,3 +1,5 @@
+from typing import TypedDict
+
 from fastapi import APIRouter
 
 router = APIRouter(
@@ -6,8 +8,13 @@ router = APIRouter(
 )
 
 
+class HealthResponse(TypedDict):
+    status: str
+    service: str
+
+
 @router.get("/")
-async def health_check():
+async def health_check() -> HealthResponse:
     return {
         "status": "healthy",
         "service": "book-rag-api",

@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, TypedDict
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -6,7 +6,9 @@ from sqlalchemy.orm import Session
 from app.api.dependencies.auth import get_current_user
 from app.core.container import container
 from app.db.postgres import get_db
+from app.models.database.document import DocumentDB
 from app.services.document_service import DocumentService
+from app.types.auth import CurrentUser
 
 router = APIRouter(
     prefix="/documents",
@@ -18,11 +20,16 @@ document_service = DocumentService(
 )
 
 
+class DeleteDocumentResponse(TypedDict):
+    message: str
+    document_id: int
+
+
 @router.get("/")
 def get_documents(
     db: Annotated[Session, Depends(get_db)],
-    current_user: Annotated[dict, Depends(get_current_user)],
-):
+    current_user: Annotated[CurrentUser, Depends(get_current_user)],
+) -> list[DocumentDB]:
 
     user_id = int(current_user["sub"])
 
@@ -38,8 +45,8 @@ def get_documents(
 def delete_document(
     document_id: int,
     db: Annotated[Session, Depends(get_db)],
-    current_user: Annotated[dict, Depends(get_current_user)],
-):
+    current_user: Annotated[CurrentUser, Depends(get_current_user)],
+) -> DeleteDocumentResponse:
 
     user_id = int(current_user["sub"])
 

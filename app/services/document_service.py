@@ -84,4 +84,3 @@ class DocumentService:
             .order_by(DocumentDB.id.asc())
             .all()
         )
-

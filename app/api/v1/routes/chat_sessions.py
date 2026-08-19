@@ -1,4 +1,5 @@
-from typing import Annotated
+from datetime import datetime
+from typing import Annotated, Any, TypedDict
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -9,6 +10,28 @@ from app.models.database.chat_message import ChatMessageDB
 from app.models.database.chat_session import ChatSessionDB
 from app.schemas.chat_session import ChatSessionUpdate
 from app.services.chat_memory_service import ChatMemoryService
+from app.types.auth import CurrentUser
+
+
+class ChatSessionResponse(TypedDict):
+    id: int
+    title: str
+    created_at: datetime
+    updated_at: datetime
+
+
+class ChatMessageResponse(TypedDict):
+    id: int
+    role: str
+    message: str
+    sources: list[dict[str, Any]]
+    created_at: datetime
+
+
+class DeleteChatSessionResponse(TypedDict):
+    message: str
+    session_id: int
+
 
 router = APIRouter(
     prefix="/chat/sessions",
@@ -18,15 +41,12 @@ router = APIRouter(
 
 @router.post("/")
 def create_chat_session(
-    current_user: Annotated[
-        dict,
-        Depends(get_current_user),
-    ],
+    current_user: Annotated[CurrentUser, Depends(get_current_user)],
     db: Annotated[
         Session,
         Depends(get_db),
     ],
-) -> dict:
+) -> ChatSessionResponse:
     user_id = int(current_user["sub"])
 
     memory = ChatMemoryService(db)
@@ -45,15 +65,12 @@ def create_chat_session(
 
 @router.get("/")
 def list_chat_sessions(
-    current_user: Annotated[
-        dict,
-        Depends(get_current_user),
-    ],
+    current_user: Annotated[CurrentUser, Depends(get_current_user)],
     db: Annotated[
         Session,
         Depends(get_db),
     ],
-) -> list[dict]:
+) -> list[ChatSessionResponse]:
     user_id = int(current_user["sub"])
 
     sessions = (
@@ -64,27 +81,25 @@ def list_chat_sessions(
     )
 
     return [
-            {
-                "id": session.id,
-                "title": session.title,
-                "created_at": session.created_at,
-                "updated_at": session.updated_at,
-            }
-            for session in sessions
-        ]
+        {
+            "id": session.id,
+            "title": session.title,
+            "created_at": session.created_at,
+            "updated_at": session.updated_at,
+        }
+        for session in sessions
+    ]
+
 
 @router.get("/{session_id}")
 def get_chat_session(
     session_id: int,
-    current_user: Annotated[
-        dict,
-        Depends(get_current_user),
-    ],
+    current_user: Annotated[CurrentUser, Depends(get_current_user)],
     db: Annotated[
         Session,
         Depends(get_db),
     ],
-) -> dict:
+) -> ChatSessionResponse:
     user_id = int(current_user["sub"])
 
     session = (
@@ -113,15 +128,12 @@ def get_chat_session(
 @router.get("/{session_id}/messages")
 def get_chat_messages(
     session_id: int,
-    current_user: Annotated[
-        dict,
-        Depends(get_current_user),
-    ],
+    current_user: Annotated[CurrentUser, Depends(get_current_user)],
     db: Annotated[
         Session,
         Depends(get_db),
     ],
-) -> list[dict]:
+) -> list[ChatMessageResponse]:
     user_id = int(current_user["sub"])
 
     session = (
@@ -157,19 +169,17 @@ def get_chat_messages(
         for message in messages
     ]
 
+
 @router.patch("/{session_id}")
 def rename_chat_session(
     session_id: int,
     payload: ChatSessionUpdate,
-    current_user: Annotated[
-        dict,
-        Depends(get_current_user),
-    ],
+    current_user: Annotated[CurrentUser, Depends(get_current_user)],
     db: Annotated[
         Session,
         Depends(get_db),
     ],
-) -> dict:
+) -> ChatSessionResponse:
     user_id = int(current_user["sub"])
 
     memory = ChatMemoryService(db)
@@ -197,15 +207,12 @@ def rename_chat_session(
 @router.delete("/{session_id}")
 def delete_chat_session(
     session_id: int,
-    current_user: Annotated[
-        dict,
-        Depends(get_current_user),
-    ],
+    current_user: Annotated[CurrentUser, Depends(get_current_user)],
     db: Annotated[
         Session,
         Depends(get_db),
     ],
-) -> dict:
+) -> DeleteChatSessionResponse:
     user_id = int(current_user["sub"])
 
     memory = ChatMemoryService(db)

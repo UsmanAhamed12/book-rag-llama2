@@ -1,3 +1,7 @@
+# app/vectorstores/chroma_store.py
+
+from collections.abc import Sequence
+
 from app.db.chroma import get_chroma_client
 from app.models.chunk import Chunk
 
@@ -7,7 +11,6 @@ class ChromaVectorStore:
         self,
         collection_name: str = "book_chunks",
     ) -> None:
-
         client = get_chroma_client()
 
         self.collection = client.get_or_create_collection(
@@ -20,11 +23,14 @@ class ChromaVectorStore:
         embeddings: list[list[float]],
         user_id: int,
     ) -> None:
+        normalized_embeddings: list[Sequence[float]] = [
+            embedding for embedding in embeddings
+        ]
 
         self.collection.add(
             ids=[chunk.chunk_id for chunk in chunks],
             documents=[chunk.text for chunk in chunks],
-            embeddings=embeddings,
+            embeddings=normalized_embeddings,
             metadatas=[
                 {
                     "user_id": user_id,
@@ -43,7 +49,6 @@ class ChromaVectorStore:
         self,
         document_id: str,
     ) -> None:
-
         results = self.collection.get(
             where={
                 "document_id": document_id,

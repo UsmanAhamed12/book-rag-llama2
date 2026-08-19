@@ -9,6 +9,7 @@ from app.db.postgres import SessionLocal, ensure_schema
 from app.models.database.document import DocumentDB
 from app.schemas.upload import UploadResponse
 from app.services.upload_service import UploadService
+from app.types.auth import CurrentUser
 
 router = APIRouter()
 
@@ -19,9 +20,13 @@ router = APIRouter()
 )
 def upload_pdf(
     file: Annotated[UploadFile, File(...)],
-    current_user: Annotated[dict, Depends(get_current_user)],
-):
+    current_user: Annotated[
+        CurrentUser,
+        Depends(get_current_user),
+    ],
+) -> UploadResponse:
     user_id = int(current_user["sub"])
+    filename = file.filename or "uploaded.pdf"
 
     ensure_schema()
 
@@ -51,7 +56,7 @@ def upload_pdf(
     try:
         document = DocumentDB(
             user_id=user_id,
-            filename=file.filename,
+            filename=filename,
             file_hash=file_hash,
             file_size=file_size,
             page_count=page_count,
@@ -79,12 +84,10 @@ def upload_pdf(
         db.commit()
 
         try:
-            summary, topics = (
-                container.document_profile_service.build_profile(
-                    user_id=user_id,
-                    document_id=str(document.id),
-                    filename=document.filename,
-                )
+            summary, topics = container.document_profile_service.build_profile(
+                user_id=user_id,
+                document_id=str(document.id),
+                filename=document.filename,
             )
 
             document.summary = summary
@@ -110,7 +113,7 @@ def upload_pdf(
         db.close()
 
     return UploadResponse(
-        filename=file.filename,
+        filename=filename,
         chunks=chunks,
         message="PDF indexed successfully",
     )

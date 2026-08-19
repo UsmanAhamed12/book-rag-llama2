@@ -12,12 +12,12 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
 
     # Authentication
-    secret_key: str
+    secret_key: str = "development-only-change-me"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
 
     # PostgreSQL
-    postgres_url: str
+    postgres_url: str = "postgresql+psycopg://postgres:postgres@localhost:5432/book_rag"
 
     # Ollama
     ollama_model: str = "llama3.2"

@@ -7,8 +7,9 @@ from app.api.dependencies.auth import get_current_user
 from app.core.container import container
 from app.db.postgres import get_db
 from app.rag.pipeline import RAGPipeline
-from app.schemas.chat import ChatRequest, ChatResponse
+from app.schemas.chat import ChatRequest, ChatResponse, SourceReference
 from app.services.chat_memory_service import ChatMemoryService
+from app.types.auth import CurrentUser
 
 router = APIRouter(
     prefix="/chat",
@@ -23,7 +24,7 @@ router = APIRouter(
 def chat(
     request: ChatRequest,
     current_user: Annotated[
-        dict,
+        CurrentUser,
         Depends(get_current_user),
     ],
     db: Annotated[
@@ -54,11 +55,8 @@ def chat(
     # ---------------------------------------------------------
     # Document-profile summary path
     # ---------------------------------------------------------
-    if (
-        request.document_ids
-        and rag_pipeline.is_document_summary_request(
-            request.question,
-        )
+    if request.document_ids and rag_pipeline.is_document_summary_request(
+        request.question,
     ):
         documents = container.document_service.get_by_ids(
             db=db,
@@ -80,27 +78,22 @@ def chat(
             )
 
             summary = (
-                document.summary
-                or "No stored summary is available for this document."
+                document.summary or "No stored summary is available for this document."
             )
 
             profile_parts.append(
-                
-                    f"Filename: {document.filename}\n\n"
-                    f"Summary:\n{summary}\n\n"
-                    f"Topics:\n{topics or 'No topics available.'}"
-                
+                f"Filename: {document.filename}\n\n"
+                f"Summary:\n{summary}\n\n"
+                f"Topics:\n{topics or 'No topics available.'}"
             )
 
         profiles = "\n\n---\n\n".join(
             profile_parts,
         )
 
-        answer = (
-            container.llm.summarize_document_profiles(
-                question=request.question,
-                profiles=profiles,
-            )
+        answer = container.llm.summarize_document_profiles(
+            question=request.question,
+            profiles=profiles,
         )
 
         memory.save_message(
@@ -136,5 +129,8 @@ def chat(
 
     return ChatResponse(
         answer=answer_payload["answer"],
-        sources=answer_payload["sources"],
+        sources=[
+            SourceReference.model_validate(source)
+            for source in answer_payload["sources"]
+        ],
     )

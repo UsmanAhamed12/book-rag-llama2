@@ -1,3 +1,6 @@
+from collections.abc import Mapping, Sequence
+from typing import Any
+
 from app.db.chroma import get_chroma_client
 from app.embeddings.base import BaseEmbeddingProvider
 from app.retrieval.models import RetrievalResult
@@ -17,6 +20,46 @@ class Retriever:
             name=collection_name,
         )
 
+    @staticmethod
+    def _to_int(
+        value: object,
+        default: int = 0,
+    ) -> int:
+        if isinstance(value, bool):
+            return int(value)
+
+        if isinstance(value, int):
+            return value
+
+        if isinstance(value, float):
+            return int(value)
+
+        if isinstance(value, str):
+            try:
+                return int(value)
+            except ValueError:
+                return default
+
+        return default
+
+    @staticmethod
+    def _metadata_dict(
+        metadata: Mapping[str, Any] | None,
+    ) -> dict[str, Any]:
+        if metadata is None:
+            return {}
+
+        return dict(metadata)
+
+    @staticmethod
+    def _first_or_empty[T](
+        value: list[list[T]] | None,
+    ) -> list[T]:
+        if not value:
+            return []
+
+        return value[0]
+
     def search(
         self,
         query: str,
@@ -25,10 +68,9 @@ class Retriever:
         top_k: int = 10,
         score_threshold: float | None = None,
     ) -> list[RetrievalResult]:
-
-        where_filter: dict = {
-        "user_id": user_id,
-    }
+        where_filter: dict[str, Any] = {
+            "user_id": user_id,
+        }
 
         if document_ids:
             where_filter = {
@@ -43,28 +85,33 @@ class Retriever:
                     },
                 ],
             }
+
         query_embedding = self.embedding_provider.embed([query])[0]
 
-
+        normalized_query: list[Sequence[float]] = [query_embedding]
 
         results = self.collection.query(
-            query_embeddings=[query_embedding],
+            query_embeddings=normalized_query,
             n_results=top_k,
             where=where_filter,
         )
 
-        documents = results.get("documents", [[]])[0]
-        distances = results.get("distances", [[]])[0]
-        metadatas = results.get("metadatas", [[]])[0]
+        documents = self._first_or_empty(results.get("documents"))
+
+        distances = self._first_or_empty(results.get("distances"))
+
+        metadatas = self._first_or_empty(results.get("metadatas"))
 
         output: list[RetrievalResult] = []
 
-        for text, distance, metadata in zip(
+        for text, distance, raw_metadata in zip(
             documents,
             distances,
             metadatas,
             strict=True,
         ):
+            metadata = self._metadata_dict(raw_metadata)
+
             similarity = 1 / (1 + float(distance))
 
             output.append(
@@ -72,17 +119,23 @@ class Retriever:
                     text=text,
                     score=similarity,
                     metadata=metadata,
-                    document_id=metadata["document_id"],
-                    page_number=metadata["page_number"],
+                    document_id=str(
+                        metadata.get(
+                            "document_id",
+                            "",
+                        )
+                    ),
+                    page_number=self._to_int(
+                        metadata.get(
+                            "page_number",
+                            0,
+                        )
+                    ),
                 )
             )
 
         if score_threshold is not None:
-            output = [
-                result
-                for result in output
-                if result.score >= score_threshold
-            ]
+            output = [result for result in output if result.score >= score_threshold]
 
         output.sort(
             key=lambda result: result.score,
@@ -101,11 +154,13 @@ class Retriever:
     ) -> list[RetrievalResult]:
         query_embedding = self.embedding_provider.embed([query])[0]
 
+        normalized_query: list[Sequence[float]] = [query_embedding]
+
         output: list[RetrievalResult] = []
 
         for document_id in document_ids:
             results = self.collection.query(
-                query_embeddings=[query_embedding],
+                query_embeddings=normalized_query,
                 n_results=per_document_k,
                 where={
                     "$and": [
@@ -119,35 +174,23 @@ class Retriever:
                 },
             )
 
-            documents = results.get(
-                "documents",
-                [[]],
-            )[0]
+            documents = self._first_or_empty(results.get("documents"))
 
-            distances = results.get(
-                "distances",
-                [[]],
-            )[0]
+            distances = self._first_or_empty(results.get("distances"))
 
-            metadatas = results.get(
-                "metadatas",
-                [[]],
-            )[0]
+            metadatas = self._first_or_empty(results.get("metadatas"))
 
-            for text, distance, metadata in zip(
+            for text, distance, raw_metadata in zip(
                 documents,
                 distances,
                 metadatas,
                 strict=True,
             ):
-                similarity = 1 / (
-                    1 + float(distance)
-                )
+                metadata = self._metadata_dict(raw_metadata)
 
-                if (
-                    score_threshold is not None
-                    and similarity < score_threshold
-                ):
+                similarity = 1 / (1 + float(distance))
+
+                if score_threshold is not None and similarity < score_threshold:
                     continue
 
                 output.append(
@@ -155,12 +198,18 @@ class Retriever:
                         text=text,
                         score=similarity,
                         metadata=metadata,
-                        document_id=metadata[
-                            "document_id"
-                        ],
-                        page_number=metadata[
-                            "page_number"
-                        ],
+                        document_id=str(
+                            metadata.get(
+                                "document_id",
+                                "",
+                            )
+                        ),
+                        page_number=self._to_int(
+                            metadata.get(
+                                "page_number",
+                                0,
+                            )
+                        ),
                     )
                 )
 
@@ -194,15 +243,11 @@ class Retriever:
             ],
         )
 
-        documents = results.get(
-            "documents",
-            [],
-        )
+        documents = results.get("documents") or []
 
-        metadatas = results.get(
-            "metadatas",
-            [],
-        )
+        raw_metadatas = results.get("metadatas") or []
+
+        metadatas = [self._metadata_dict(metadata) for metadata in raw_metadatas]
 
         if not documents:
             return []
@@ -217,13 +262,13 @@ class Retriever:
 
         indexed.sort(
             key=lambda item: (
-                int(
+                self._to_int(
                     item[1].get(
                         "page_number",
                         0,
                     )
                 ),
-                int(
+                self._to_int(
                     item[1].get(
                         "chunk_index",
                         0,
@@ -236,20 +281,11 @@ class Retriever:
             selected = indexed
         else:
             positions = [
-                round(
-                    index
-                    * (len(indexed) - 1)
-                    / (sample_count - 1)
-                )
-                for index in range(
-                    sample_count
-                )
+                round(index * (len(indexed) - 1) / (sample_count - 1))
+                for index in range(sample_count)
             ]
 
-            selected = [
-                indexed[position]
-                for position in positions
-            ]
+            selected = [indexed[position] for position in positions]
 
         return [
             RetrievalResult(
@@ -257,14 +293,16 @@ class Retriever:
                 score=1.0,
                 metadata=metadata,
                 document_id=str(
-                    metadata[
-                        "document_id"
-                    ]
+                    metadata.get(
+                        "document_id",
+                        "",
+                    )
                 ),
-                page_number=int(
-                    metadata[
-                        "page_number"
-                    ]
+                page_number=self._to_int(
+                    metadata.get(
+                        "page_number",
+                        0,
+                    )
                 ),
             )
             for text, metadata in selected
@@ -284,32 +322,23 @@ class Retriever:
             semantic_results = self.search(
                 query=query,
                 user_id=user_id,
-                document_ids=[
-                    document_id
-                ],
+                document_ids=[document_id],
                 top_k=semantic_k,
             )
 
-            representative_results = (
-                self.get_representative_chunks(
-                    user_id=user_id,
-                    document_id=document_id,
-                    sample_count=representative_k,
-                )
+            representative_results = self.get_representative_chunks(
+                user_id=user_id,
+                document_id=document_id,
+                sample_count=representative_k,
             )
 
-            seen: set[
-                tuple[str, int, int]
-            ] = set()
+            seen: set[tuple[str, int, int]] = set()
 
-            for result in (
-                representative_results
-                + semantic_results
-            ):
+            for result in representative_results + semantic_results:
                 identity = (
                     result.document_id,
                     result.page_number,
-                    int(
+                    self._to_int(
                         result.metadata.get(
                             "chunk_index",
                             0,
@@ -324,4 +353,3 @@ class Retriever:
                 combined.append(result)
 
         return combined
-
