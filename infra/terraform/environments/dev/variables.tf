@@ -48,3 +48,21 @@ variable "private_subnet_cidrs" {
     "10.0.12.0/24",
   ]
 }
+
+variable "database_name" {
+  description = "PostgreSQL database name."
+  type        = string
+  default     = "book_rag"
+}
+
+variable "database_username" {
+  description = "PostgreSQL master username."
+  type        = string
+  default     = "bookrag_admin"
+}
+
+variable "database_instance_class" {
+  description = "RDS instance class for development."
+  type        = string
+  default     = "db.t4g.micro"
+}

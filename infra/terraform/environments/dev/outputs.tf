@@ -37,3 +37,23 @@ output "backend_ecr_repository_url" {
   description = "Backend ECR repository URL."
   value       = module.ecr.backend_repository_url
 }
+
+output "database_endpoint" {
+  description = "RDS PostgreSQL endpoint."
+  value       = module.database.database_endpoint
+}
+
+output "database_port" {
+  description = "RDS PostgreSQL port."
+  value       = module.database.database_port
+}
+
+output "database_security_group_id" {
+  description = "RDS security group ID."
+  value       = module.database.database_security_group_id
+}
+
+output "database_master_secret_arn" {
+  description = "Secrets Manager ARN for RDS master credentials."
+  value       = module.database.master_user_secret_arn
+}

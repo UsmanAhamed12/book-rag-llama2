@@ -19,3 +19,17 @@ module "ecr" {
   project_name = var.project_name
   environment  = var.environment
 }
+
+module "database" {
+  source = "../../modules/database"
+
+  project_name = var.project_name
+  environment  = var.environment
+
+  vpc_id             = module.networking.vpc_id
+  private_subnet_ids = module.networking.private_subnet_ids
+
+  database_name     = var.database_name
+  database_username = var.database_username
+  instance_class    = var.database_instance_class
+}
