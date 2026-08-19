@@ -1,0 +1,12 @@
+[
+  {
+    "question": "Replace with a question whose answer is present in an indexed document.",
+    "relevant_chunks": [
+      {
+        "document_id": "replace-with-document-id",
+        "page_number": 1,
+        "chunk_index": 0
+      }
+    ]
+  }
+]
