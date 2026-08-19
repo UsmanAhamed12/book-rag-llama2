@@ -26,6 +26,12 @@ class Settings(BaseSettings):
     # Embeddings
     embedding_model: str = "BAAI/bge-small-en-v1.5"
 
+    # Retrieval / reranking
+    reranking_enabled: bool = False
+    reranker_model: str = "cross-encoder/ms-marco-MiniLM-L6-v2"
+    retrieval_candidate_k: int = 20
+    retrieval_top_k: int = 5
+
     # Storage
     chroma_db_path: str = "data/chroma"
     chroma_path: str = "data/chroma"
