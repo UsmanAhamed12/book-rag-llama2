@@ -1,0 +1,26 @@
+{
+  "dataset": "data/evaluation/retrieval_benchmark.json",
+  "document_id": "9",
+  "scope": "document_only_legacy_evaluation",
+  "examples": 20,
+  "results": {
+    "1": {
+      "examples": 20,
+      "hit_rate_at_k": 0.5,
+      "recall_at_k": 0.5,
+      "mean_reciprocal_rank": 0.5
+    },
+    "3": {
+      "examples": 20,
+      "hit_rate_at_k": 0.8,
+      "recall_at_k": 0.8,
+      "mean_reciprocal_rank": 0.6166666666666667
+    },
+    "5": {
+      "examples": 20,
+      "hit_rate_at_k": 0.95,
+      "recall_at_k": 0.95,
+      "mean_reciprocal_rank": 0.6516666666666666
+    }
+  }
+}
