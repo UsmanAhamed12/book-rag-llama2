@@ -1,4 +1,4 @@
-from collections.abc import Sequence
+from typing import Any, cast
 
 from sentence_transformers import CrossEncoder
 
@@ -16,5 +16,6 @@ class CrossEncoderProvider:
             self._model = CrossEncoder(self.model_name)
         return self._model
 
-    def predict(self, sentences: list[tuple[str, str]]) -> Sequence[float]:
-        return self.model.predict(sentences)
+    def predict(self, sentences: list[tuple[str, str]]) -> list[float]:
+        raw_scores = self.model.predict(cast(Any, sentences))
+        return [float(score) for score in raw_scores]
