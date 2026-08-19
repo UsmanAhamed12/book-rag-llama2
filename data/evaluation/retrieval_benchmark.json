@@ -1,0 +1,169 @@
+[
+  {
+    "id": "de-001",
+    "question": "What are the two key problems within data integration discussed in the book?",
+    "document_id": "9",
+    "relevant_chunks": [
+      {"page_number": 6, "chunk_index": 1}
+    ]
+  },
+  {
+  "id": "de-002",
+  "question": "What future research directions are suggested for entity resolution?",
+  "document_id": "9",
+  "relevant_chunks": [
+    {
+      "page_number": 7,
+      "chunk_index": 1
+    },
+    {
+      "page_number": 53,
+      "chunk_index": 1
+    }
+  ]
+},
+  {
+    "id": "de-003",
+    "question": "How does the book organize the major areas of data engineering?",
+    "document_id": "9",
+    "relevant_chunks": [
+      {"page_number": 6, "chunk_index": 2}
+    ]
+  },
+  {
+    "id": "de-004",
+    "question": "How did information quality emerge from data warehousing?",
+    "document_id": "9",
+    "relevant_chunks": [
+      {"page_number": 6, "chunk_index": 3}
+    ]
+  },
+  {
+    "id": "de-005",
+    "question": "What data quality problems became apparent when independently maintained data stores were integrated?",
+    "document_id": "9",
+    "relevant_chunks": [
+      {"page_number": 6, "chunk_index": 3}
+    ]
+  },
+  {
+    "id": "de-006",
+    "question": "What was the early purpose of information quality techniques?",
+    "document_id": "9",
+    "relevant_chunks": [
+      {"page_number": 6, "chunk_index": 3}
+    ]
+  },
+  {
+    "id": "de-007",
+    "question": "Why has grid computing become increasingly important?",
+    "document_id": "9",
+    "relevant_chunks": [
+      {"page_number": 6, "chunk_index": 4}
+    ]
+  },
+  {
+    "id": "de-008",
+    "question": "Why can customer data integration require grid computing?",
+    "document_id": "9",
+    "relevant_chunks": [
+      {"page_number": 25, "chunk_index": 4}
+    ]
+  },
+  {
+    "id": "de-009",
+    "question": "What tasks are included in the analytics subsystem?",
+    "document_id": "9",
+    "relevant_chunks": [
+      {"page_number": 19, "chunk_index": 0}
+    ]
+  },
+  {
+    "id": "de-010",
+    "question": "What techniques are included under the broad term analytics?",
+    "document_id": "9",
+    "relevant_chunks": [
+      {"page_number": 26, "chunk_index": 1}
+    ]
+  },
+  {
+    "id": "de-011",
+    "question": "Why are simple string matching algorithms insufficient for some customer data matching problems?",
+    "document_id": "9",
+    "relevant_chunks": [
+      {"page_number": 92, "chunk_index": 0}
+    ]
+  },
+  {
+    "id": "de-012",
+    "question": "How can Latent Semantic Indexing improve semantic data matching?",
+    "document_id": "9",
+    "relevant_chunks": [
+      {"page_number": 92, "chunk_index": 0}
+    ]
+  },
+  {
+    "id": "de-013",
+    "question": "Why can removing shared terms improve LSI performance for semantic data matching?",
+    "document_id": "9",
+    "relevant_chunks": [
+      {"page_number": 92, "chunk_index": 2}
+    ]
+  },
+  {
+    "id": "de-014",
+    "question": "What are the three sub-problems involved in isolated-word spelling correction?",
+    "document_id": "9",
+    "relevant_chunks": [
+      {"page_number": 108, "chunk_index": 1}
+    ]
+  },
+  {
+    "id": "de-015",
+    "question": "What is minimum edit distance in spelling correction?",
+    "document_id": "9",
+    "relevant_chunks": [
+      {"page_number": 108, "chunk_index": 2}
+    ]
+  },
+  {
+    "id": "de-016",
+    "question": "What operations are counted when calculating edit distance between two strings?",
+    "document_id": "9",
+    "relevant_chunks": [
+      {"page_number": 108, "chunk_index": 2}
+    ]
+  },
+  {
+    "id": "de-017",
+    "question": "What are the main applications of synthetic data generation described in the book?",
+    "document_id": "9",
+    "relevant_chunks": [
+      {"page_number": 117, "chunk_index": 0}
+    ]
+  },
+  {
+    "id": "de-018",
+    "question": "How can synthetic data support secure application development?",
+    "document_id": "9",
+    "relevant_chunks": [
+      {"page_number": 117, "chunk_index": 0}
+    ]
+  },
+  {
+    "id": "de-019",
+    "question": "How can synthetic data be used to test data mining applications?",
+    "document_id": "9",
+    "relevant_chunks": [
+      {"page_number": 117, "chunk_index": 0}
+    ]
+  },
+  {
+    "id": "de-020",
+    "question": "What scalability limitation is identified in existing commercial synthetic data generation tools?",
+    "document_id": "9",
+    "relevant_chunks": [
+      {"page_number": 117, "chunk_index": 1}
+    ]
+  }
+]
