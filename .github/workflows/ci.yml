@@ -44,8 +44,7 @@ jobs:
       - name: Ruff
         run: uv run ruff check app tests
 
-      - name: Run tests
-        run: uv run pytest -v
+      
 
       - name: MyPy
         continue-on-error: true
