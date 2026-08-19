@@ -9,17 +9,10 @@ import {
   Database,
   Layers,
 } from "lucide-react";
-import {
-  ChangeEvent,
-  DragEvent,
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
+import { ChangeEvent, DragEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { AppShell } from "@/components/layout/app-shell";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -46,18 +39,18 @@ export default function DocumentsPage() {
   const [error, setError] = useState("");
   const [isDragActive, setIsDragActive] = useState(false);
 
-  const loadDocuments = useCallback(async () => {
-    setLoading(true);
-    try {
-      setError("");
-      const data = await getDocuments();
-      setDocuments(data);
-    } catch {
-      setError("Unable to load documents.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // const loadDocuments = useCallback(async () => {
+  //   setLoading(true);
+  //   try {
+  //     setError("");
+  //     const data = await getDocuments();
+  //     setDocuments(data);
+  //   } catch {
+  //     setError("Unable to load documents.");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, []);
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");
@@ -158,11 +151,12 @@ export default function DocumentsPage() {
       <div className="space-y-8">
         {/* Header Title Section */}
         <div>
-          <h2 className="text-3xl font-heading font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
+          <h2 className="text-3xl font-heading font-extrabold tracking-tight bg-linear-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
             Documents Indexer
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Ingest your reference PDF books. The system will slice them, extract embeddings, and index them into the vector database.
+            Ingest your reference PDF books. The system will slice them, extract
+            embeddings, and index them into the vector database.
           </p>
         </div>
 
@@ -195,7 +189,10 @@ export default function DocumentsPage() {
             onChange={handleUpload}
             disabled={uploading}
           />
-          <label htmlFor="pdf-upload" className="w-full h-full cursor-pointer flex flex-col items-center justify-center gap-4">
+          <label
+            htmlFor="pdf-upload"
+            className="w-full h-full cursor-pointer flex flex-col items-center justify-center gap-4"
+          >
             <div className="flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-xl shadow-primary/5">
               {uploading ? (
                 <Loader2 className="size-7 animate-spin" />
@@ -206,7 +203,9 @@ export default function DocumentsPage() {
 
             <div>
               <p className="font-heading font-bold text-sm text-foreground/90">
-                {uploading ? "Indexing your document..." : "Drag & Drop your PDF file here"}
+                {uploading
+                  ? "Indexing your document..."
+                  : "Drag & Drop your PDF file here"}
               </p>
               <p className="text-xs text-muted-foreground mt-1.5 max-w-xs mx-auto leading-relaxed">
                 {uploading
@@ -229,7 +228,9 @@ export default function DocumentsPage() {
           {loading ? (
             <div className="flex min-h-64 items-center justify-center flex-col gap-3">
               <Loader2 className="size-6 animate-spin text-primary" />
-              <p className="text-xs text-muted-foreground">Reading database records...</p>
+              <p className="text-xs text-muted-foreground">
+                Reading database records...
+              </p>
             </div>
           ) : documents.length === 0 ? (
             <Card className="glass-panel border-white/5 shadow-xl rounded-xl">
@@ -239,7 +240,8 @@ export default function DocumentsPage() {
                   No documents synced
                 </h3>
                 <p className="mt-2 max-w-sm text-xs text-muted-foreground leading-relaxed">
-                  Your RAG assistant is empty. Ingest a PDF document using the drop zone above to start chatting.
+                  Your RAG assistant is empty. Ingest a PDF document using the
+                  drop zone above to start chatting.
                 </p>
               </CardContent>
             </Card>
@@ -251,27 +253,37 @@ export default function DocumentsPage() {
                 const failed = doc.status === "failed";
 
                 return (
-                  <Card key={doc.id} className="aurora-glow-card glass-panel rounded-xl shadow-lg border border-white/5 relative overflow-hidden group">
+                  <Card
+                    key={doc.id}
+                    className="aurora-glow-card glass-panel rounded-xl shadow-lg border border-white/5 relative overflow-hidden group"
+                  >
                     <CardHeader className="pb-3 border-b border-border/40">
                       <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0">
-                          <CardTitle className="truncate text-sm font-semibold font-heading text-foreground/90" title={doc.filename}>
+                          <CardTitle
+                            className="truncate text-sm font-semibold font-heading text-foreground/90"
+                            title={doc.filename}
+                          >
                             {doc.filename}
                           </CardTitle>
                           <CardDescription className="text-[10px] mt-1 text-muted-foreground flex items-center gap-1.5">
                             <Layers className="size-3 text-violet-500" />
-                            <span>{doc.page_count} pages · {doc.chunks} chunks</span>
+                            <span>
+                              {doc.page_count} pages · {doc.chunks} chunks
+                            </span>
                           </CardDescription>
                         </div>
 
-                        <span className={[
-                          "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider border",
-                          completed
-                            ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
-                            : failed
-                            ? "border-destructive/20 bg-destructive/10 text-destructive"
-                            : "border-violet-500/20 bg-violet-500/10 text-violet-400 animate-pulse"
-                        ].join(" ")}>
+                        <span
+                          className={[
+                            "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider border",
+                            completed
+                              ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                              : failed
+                                ? "border-destructive/20 bg-destructive/10 text-destructive"
+                                : "border-violet-500/20 bg-violet-500/10 text-violet-400 animate-pulse",
+                          ].join(" ")}
+                        >
                           {doc.status}
                         </span>
                       </div>

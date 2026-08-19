@@ -1,13 +1,12 @@
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from jose import JWTError, jwt
 from pwdlib import PasswordHash
 
-password_hash = PasswordHash.recommended()
+from app.core.settings import settings
 
-SECRET_KEY = "change-this-in-production"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+password_hash = PasswordHash.recommended()
 
 
 def hash_password(password: str) -> str:
@@ -25,38 +24,39 @@ def verify_password(
 
 
 def create_access_token(
-    data: dict,
+    data: dict[str, Any],
     expires_delta: timedelta | None = None,
 ) -> str:
-
     to_encode = data.copy()
 
     if expires_delta:
         expire = datetime.now(UTC) + expires_delta
     else:
-        expire = datetime.now(UTC) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-
-    to_encode.update(
-        {
-            "exp": expire,
-        }
-    )
-
-    return jwt.encode(
-        to_encode,
-        SECRET_KEY,
-        algorithm=ALGORITHM,
-    )
-
-
-def decode_access_token(token: str) -> dict:
-
-    try:
-        return jwt.decode(
-            token,
-            SECRET_KEY,
-            algorithms=[ALGORITHM],
+        expire = datetime.now(UTC) + timedelta(
+            minutes=settings.access_token_expire_minutes,
         )
 
+    to_encode["exp"] = expire
+
+    token = jwt.encode(
+        to_encode,
+        settings.secret_key,
+        algorithm=settings.algorithm,
+    )
+
+    return str(token)
+
+
+def decode_access_token(
+    token: str,
+) -> dict[str, Any]:
+    try:
+        payload = jwt.decode(
+            token,
+            settings.secret_key,
+            algorithms=[settings.algorithm],
+        )
     except JWTError as exc:
         raise ValueError("Invalid token") from exc
+
+    return dict(payload)

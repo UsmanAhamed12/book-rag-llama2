@@ -4,44 +4,42 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Application settings."""
+    """Application settings loaded from environment variables."""
 
-    app_name: str = "Book RAG"
-
-    app_version: str = "0.1.0"
-
+    app_name: str = "Book RAG Assistant"
+    app_version: str = "1.0.0"
     environment: str = "development"
-
     log_level: str = "INFO"
 
+    # Authentication
+    secret_key: str
+    algorithm: str = "HS256"
+    access_token_expire_minutes: int = 60
+
+    # PostgreSQL
+    postgres_url: str
+
+    # Ollama
     ollama_model: str = "llama3.2"
+    ollama_host: str = "http://localhost:11434"
 
-    chroma_db_path: str = "data/chroma"
-
+    # Embeddings
     embedding_model: str = "BAAI/bge-small-en-v1.5"
+
+    # Storage
+    chroma_db_path: str = "data/chroma"
+    chroma_path: str = "data/chroma"
+    upload_dir: str = "data/uploads"
+
+    # Legacy/default document configuration
+    book_path: str = "data/uploads/Data_Engineering.pdf"
+    document_id: str = "data_engineering_book"
 
     model_config = SettingsConfigDict(
         env_file=".env",
         case_sensitive=False,
         extra="ignore",
     )
-
-    book_path: str = "data/uploads/Data_Engineering.pdf"
-
-    chroma_path: str = "data/chroma"
-
-    upload_dir: str = "data/uploads"
-
-    postgres_url: str = (
-        "postgresql+psycopg://postgres:postgres123@localhost:5432/book_rag"
-    )
-    #     postgres_url: str = (
-    # "postgresql+psycopg://postgres:postgres123@postgres:5432/book_rag"
-    # )
-
-    document_id: str = "data_engineering_book"
-    # class Config:
-    #     env_file = ".env"
 
 
 @lru_cache

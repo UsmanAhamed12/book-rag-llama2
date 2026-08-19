@@ -1,19 +1,29 @@
+from typing import Any, cast
+
 import ollama
+
+from app.core.settings import settings
 
 
 class OllamaClient:
     def __init__(
         self,
-        model: str = "llama3.2",
+        model: str | None = None,
+        host: str | None = None,
     ) -> None:
-        self.model = model
+        self.model = model or settings.ollama_model
+        self.host = host or settings.ollama_host
+
+        self.client = ollama.Client(
+            host=self.host,
+        )
 
     def generate(
         self,
         prompt: str,
     ) -> str:
         try:
-            response = ollama.chat(
+            response = self.client.chat(
                 model=self.model,
                 messages=[
                     {
@@ -23,7 +33,12 @@ class OllamaClient:
                 ],
             )
 
-            return response["message"]["content"]
+            content = cast(
+                str,
+                response["message"]["content"],
+            )
+
+            return content
 
         except Exception:
             return (
@@ -37,7 +52,7 @@ class OllamaClient:
         prompt: str,
     ) -> str | None:
         try:
-            response = ollama.chat(
+            response = self.client.chat(
                 model=self.model,
                 messages=[
                     {
@@ -47,7 +62,12 @@ class OllamaClient:
                 ],
             )
 
-            content = response["message"]["content"].strip()
+            raw_content: Any = response["message"]["content"]
+
+            if not isinstance(raw_content, str):
+                return None
+
+            content = raw_content.strip()
 
             return content or None
 

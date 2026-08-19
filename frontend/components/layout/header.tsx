@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, User, Menu } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
