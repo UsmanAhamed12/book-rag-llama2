@@ -76,7 +76,11 @@ def main() -> None:
             top_k=args.candidate_k,
         )
         reranked_results.append(
-            [item.result for item in reranked if isinstance(item.result, RetrievalResult)]
+            [
+                item.result
+                for item in reranked
+                if isinstance(item.result, RetrievalResult)
+            ]
         )
 
         print(
