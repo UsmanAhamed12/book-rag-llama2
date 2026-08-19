@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.api.dependencies.auth import get_current_user
 from app.core.container import container
 from app.db.postgres import get_db
-from app.models.database.document import DocumentDB
+from app.schemas.document import DocumentResponse
 from app.services.document_service import DocumentService
 from app.types.auth import CurrentUser
 
@@ -25,12 +25,11 @@ class DeleteDocumentResponse(TypedDict):
     document_id: int
 
 
-@router.get("/")
+@router.get("/", response_model=list[DocumentResponse])
 def get_documents(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[CurrentUser, Depends(get_current_user)],
-) -> list[DocumentDB]:
-
+) -> list[DocumentResponse]:
     user_id = int(current_user["sub"])
 
     documents = document_service.get_all(
@@ -38,7 +37,7 @@ def get_documents(
         user_id,
     )
 
-    return documents
+    return [DocumentResponse.model_validate(document) for document in documents]
 
 
 @router.delete("/{document_id}")
@@ -47,7 +46,6 @@ def delete_document(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[CurrentUser, Depends(get_current_user)],
 ) -> DeleteDocumentResponse:
-
     user_id = int(current_user["sub"])
 
     document = document_service.delete(
