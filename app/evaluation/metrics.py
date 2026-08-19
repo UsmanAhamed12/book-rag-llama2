@@ -61,8 +61,14 @@ def evaluate_retrieval(
             mean_reciprocal_rank=0.0,
         )
 
-    hits = [hit_at_k(example, results, k) for example, results in zip(examples, ranked_results, strict=True)]
-    recalls = [recall_at_k(example, results, k) for example, results in zip(examples, ranked_results, strict=True)]
+    hits = [
+        hit_at_k(example, results, k)
+        for example, results in zip(examples, ranked_results, strict=True)
+    ]
+    recalls = [
+        recall_at_k(example, results, k)
+        for example, results in zip(examples, ranked_results, strict=True)
+    ]
     reciprocal_ranks = [
         reciprocal_rank(example, results, k)
         for example, results in zip(examples, ranked_results, strict=True)
