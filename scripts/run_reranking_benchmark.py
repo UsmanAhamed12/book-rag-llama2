@@ -47,7 +47,12 @@ def main() -> None:
         raise ValueError("candidate-k must be greater than zero")
 
     examples = load_retrieval_examples(args.dataset)
-    retriever = DocumentScopedEvaluationRetriever(container.retriever)
+
+    # Evaluation intentionally starts from the plain vector retriever. Production
+    # may already wrap it with RerankingRetriever when RERANKING_ENABLED=true,
+    # but this benchmark must compare vector-only candidates against one explicit
+    # reranking pass without weakening the legacy document-scoped evaluation path.
+    retriever = DocumentScopedEvaluationRetriever(container.vector_retriever)
 
     print(f"Loading cross-encoder: {args.model}")
     model = CrossEncoder(args.model)
