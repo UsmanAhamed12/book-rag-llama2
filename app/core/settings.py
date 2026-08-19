@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     # Retrieval / reranking
     reranking_enabled: bool = False
     reranker_model: str = "cross-encoder/ms-marco-MiniLM-L6-v2"
-    retrieval_candidate_k: int = 20
+    retrieval_candidate_k: int = 10
     retrieval_top_k: int = 5
 
     # Storage
