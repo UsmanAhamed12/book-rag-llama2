@@ -83,10 +83,7 @@ def main() -> None:
             ]
         )
 
-        print(
-            f"[{index:02d}/{len(examples)}] reranked "
-            f"{len(candidates)} candidates"
-        )
+        print(f"[{index:02d}/{len(examples)}] reranked {len(candidates)} candidates")
 
     report: dict[str, object] = {
         "dataset": str(args.dataset),
