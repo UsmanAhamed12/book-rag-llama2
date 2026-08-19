@@ -1,6 +1,9 @@
+from app.core.settings import settings
 from app.embeddings.embedding_service import EmbeddingService
 from app.embeddings.sentence_transformer_provider import SentenceTransformerProvider
 from app.llm.service import LLMService
+from app.retrieval.cross_encoder_provider import CrossEncoderProvider
+from app.retrieval.reranking_retriever import RerankingRetriever
 from app.retrieval.retriever import Retriever
 from app.services.document_profile_service import DocumentProfileService
 from app.services.document_service import DocumentService
@@ -9,9 +12,7 @@ from app.vectorstores.chroma_store import ChromaVectorStore
 
 
 class Container:
-    """
-    Creates application-wide services once.
-    """
+    """Create application-wide services once."""
 
     def __init__(self) -> None:
         self.embedding_provider = SentenceTransformerProvider()
@@ -27,9 +28,23 @@ class Container:
             self.vector_store,
         )
 
-        self.retriever = Retriever(
+        self.vector_retriever = Retriever(
             self.embedding_provider,
         )
+
+        self.reranker_provider: CrossEncoderProvider | None = None
+
+        if settings.reranking_enabled:
+            self.reranker_provider = CrossEncoderProvider(
+                settings.reranker_model,
+            )
+            self.retriever: Retriever = RerankingRetriever(
+                base_retriever=self.vector_retriever,
+                reranker=self.reranker_provider,
+                candidate_k=settings.retrieval_candidate_k,
+            )
+        else:
+            self.retriever = self.vector_retriever
 
         self.llm = LLMService()
 
