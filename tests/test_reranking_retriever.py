@@ -4,9 +4,10 @@ import pytest
 
 from app.retrieval.models import RetrievalResult
 from app.retrieval.reranking_retriever import RerankingRetriever
+from app.retrieval.retriever import Retriever
 
 
-class FakeBaseRetriever:
+class FakeBaseRetriever(Retriever):
     def __init__(self, results: list[RetrievalResult]) -> None:
         self.results = results
         self.search_top_k: int | None = None
@@ -83,7 +84,7 @@ def test_reranking_retriever_reranks_vector_candidates() -> None:
     ]
     base = FakeBaseRetriever(results)
     reranker = FakeReranker([0.1, 0.9, 0.5])
-    retriever = RerankingRetriever(base, reranker, candidate_k=3)  # type: ignore[arg-type]
+    retriever = RerankingRetriever(base, reranker, candidate_k=3)
 
     reranked = retriever.search(
         query="question",
@@ -108,7 +109,7 @@ def test_reranking_retriever_uses_top_k_when_larger_than_candidate_k() -> None:
         make_result("third", 0.7),
     ]
     base = FakeBaseRetriever(results)
-    retriever = RerankingRetriever(  # type: ignore[arg-type]
+    retriever = RerankingRetriever(
         base,
         FakeReranker([0.3, 0.2, 0.1]),
         candidate_k=2,
@@ -120,7 +121,7 @@ def test_reranking_retriever_uses_top_k_when_larger_than_candidate_k() -> None:
 
 
 def test_reranking_retriever_returns_empty_without_candidates() -> None:
-    retriever = RerankingRetriever(  # type: ignore[arg-type]
+    retriever = RerankingRetriever(
         FakeBaseRetriever([]),
         FakeReranker([]),
     )
@@ -130,7 +131,7 @@ def test_reranking_retriever_returns_empty_without_candidates() -> None:
 
 def test_reranking_retriever_rejects_invalid_candidate_k() -> None:
     with pytest.raises(ValueError, match="candidate_k"):
-        RerankingRetriever(  # type: ignore[arg-type]
+        RerankingRetriever(
             FakeBaseRetriever([]),
             FakeReranker([]),
             candidate_k=0,
@@ -138,7 +139,7 @@ def test_reranking_retriever_rejects_invalid_candidate_k() -> None:
 
 
 def test_reranking_retriever_rejects_invalid_top_k() -> None:
-    retriever = RerankingRetriever(  # type: ignore[arg-type]
+    retriever = RerankingRetriever(
         FakeBaseRetriever([]),
         FakeReranker([]),
     )
@@ -149,7 +150,7 @@ def test_reranking_retriever_rejects_invalid_top_k() -> None:
 
 def test_reranking_retriever_rejects_score_count_mismatch() -> None:
     results = [make_result("first", 0.9), make_result("second", 0.8)]
-    retriever = RerankingRetriever(  # type: ignore[arg-type]
+    retriever = RerankingRetriever(
         FakeBaseRetriever(results),
         FakeReranker([0.5]),
     )

@@ -1,7 +1,7 @@
 from app.ingestion.chunkers.recursive_chunker import RecursiveChunker
 
 
-def test_chunker_creates_chunks():
+def test_chunker_creates_chunks() -> None:
     text = "A" * 5000
 
     chunker = RecursiveChunker(

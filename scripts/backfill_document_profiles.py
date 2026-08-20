@@ -25,12 +25,10 @@ def main() -> None:
             db.commit()
 
             try:
-                summary, topics = (
-                    container.document_profile_service.build_profile(
-                        user_id=document.user_id,
-                        document_id=str(document.id),
-                        filename=document.filename,
-                    )
+                summary, topics = container.document_profile_service.build_profile(
+                    user_id=document.user_id,
+                    document_id=str(document.id),
+                    filename=document.filename,
                 )
 
                 document.summary = summary

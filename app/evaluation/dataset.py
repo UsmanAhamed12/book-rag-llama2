@@ -61,14 +61,10 @@ def load_retrieval_examples(path: str | Path) -> list[RetrievalExample]:
             chunk_index = chunk.get("chunk_index")
 
             if not isinstance(page_number, int) or isinstance(page_number, bool):
-                raise ValueError(
-                    f"Benchmark item {index} has an invalid page_number"
-                )
+                raise ValueError(f"Benchmark item {index} has an invalid page_number")
 
             if not isinstance(chunk_index, int) or isinstance(chunk_index, bool):
-                raise ValueError(
-                    f"Benchmark item {index} has an invalid chunk_index"
-                )
+                raise ValueError(f"Benchmark item {index} has an invalid chunk_index")
 
             identities.add((document_id, page_number, chunk_index))
 
