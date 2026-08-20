@@ -57,3 +57,19 @@ output "database_master_secret_arn" {
   description = "Secrets Manager ARN for RDS master credentials."
   value       = module.database.master_user_secret_arn
 }
+
+
+output "vpc_endpoint_security_group_id" {
+  description = "Security group used by interface VPC endpoints."
+  value       = module.vpc_endpoints.security_group_id
+}
+
+output "vpc_interface_endpoint_ids" {
+  description = "Interface VPC endpoint IDs."
+  value       = module.vpc_endpoints.interface_endpoint_ids
+}
+
+output "s3_vpc_endpoint_id" {
+  description = "S3 gateway VPC endpoint ID."
+  value       = module.vpc_endpoints.s3_endpoint_id
+}

@@ -33,3 +33,19 @@ module "database" {
   database_username = var.database_username
   instance_class    = var.database_instance_class
 }
+
+
+module "vpc_endpoints" {
+  source = "../../modules/vpc_endpoints"
+
+  project_name = var.project_name
+  environment  = var.environment
+  aws_region   = var.aws_region
+
+  vpc_id   = module.networking.vpc_id
+  vpc_cidr = var.vpc_cidr
+
+  private_subnet_ids = module.networking.private_subnet_ids
+
+  private_route_table_id = module.networking.private_route_table_id
+}
