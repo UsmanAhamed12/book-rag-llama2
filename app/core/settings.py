@@ -1,4 +1,5 @@
 from functools import lru_cache
+from urllib.parse import quote_plus
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -17,7 +18,26 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 60
 
     # PostgreSQL
-    postgres_url: str = "postgresql+psycopg://postgres:postgres@localhost:5432/book_rag"
+    postgres_url: str | None = None
+
+    postgres_host: str = "localhost"
+    postgres_port: int = 5432
+    postgres_db: str = "book_rag"
+    postgres_user: str = "postgres"
+    postgres_password: str = "postgres"
+
+    @property
+    def database_url(self) -> str:
+        if self.postgres_url:
+            return self.postgres_url
+
+        username = quote_plus(self.postgres_user)
+        password = quote_plus(self.postgres_password)
+
+        return (
+            f"postgresql+psycopg://{username}:{password}"
+            f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
+        )
 
     # Ollama
     ollama_model: str = "llama3.2"

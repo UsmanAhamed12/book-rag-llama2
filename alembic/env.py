@@ -5,11 +5,11 @@ from sqlalchemy import engine_from_config, pool
 from alembic import context
 from app.core.settings import settings
 from app.db.postgres import Base
-from app.models.database.chat import ChatHistory
-from app.models.database.chat_message import ChatMessageDB
-from app.models.database.chat_session import ChatSessionDB
-from app.models.database.document import DocumentDB
-from app.models.database.user import UserDB
+from app.models.database.chat import ChatHistory  # noqa: F401
+from app.models.database.chat_message import ChatMessageDB  # noqa: F401
+from app.models.database.chat_session import ChatSessionDB  # noqa: F401
+from app.models.database.document import DocumentDB  # noqa: F401
+from app.models.database.user import UserDB  # noqa: F401
 
 # Import all models so SQLAlchemy metadata knows about them.
 
@@ -22,7 +22,7 @@ if config.config_file_name is not None:
 # Use the same database URL as the application.
 config.set_main_option(
     "sqlalchemy.url",
-    settings.postgres_url.replace("%", "%%"),
+    settings.database_url.replace("%", "%%"),
 )
 
 target_metadata = Base.metadata
