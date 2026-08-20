@@ -2,7 +2,7 @@
 
 ## Requirements
 
-Install Python 3.12, uv, PostgreSQL, Ollama, Node.js, and npm.
+Install Python 3.12, uv, PostgreSQL 16, Ollama, Node.js, and npm. Docker is optional.
 
 ## 1. Clone and install
 
@@ -20,6 +20,20 @@ openssl rand -hex 32
 ```
 
 Put the generated value into `SECRET_KEY`. Configure `POSTGRES_URL` for your local PostgreSQL instance.
+
+The minimum local configuration is:
+
+```env
+SECRET_KEY=<generated-value>
+POSTGRES_URL=postgresql+psycopg://postgres:<password>@localhost:5432/book_rag
+LLM_PROVIDER=ollama
+OLLAMA_MODEL=llama3.2
+OLLAMA_HOST=http://localhost:11434
+CHROMA_DB_PATH=data/chroma
+UPLOAD_DIR=data/uploads
+```
+
+Leave `RERANKING_ENABLED=false` for the lightest first run. Enabling it downloads and loads the configured cross-encoder model and uses `RETRIEVAL_CANDIDATE_K`, `RETRIEVAL_TOP_K`, and `RERANKER_WEIGHT`.
 
 ## 3. Prepare PostgreSQL
 
@@ -58,13 +72,19 @@ npm run dev
 
 Open `http://localhost:3000`.
 
+The browser app expects the API base URL from `frontend/.env.local` or its build environment. For local development, use:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+```
+
 ## 7. Validate the project
 
 ```bash
-uv run ruff check app tests
-uv run ruff format --check app tests
-uv run mypy app
-uv run pytest -v
+uv run ruff check app tests scripts alembic
+uv run ruff format --check app tests scripts alembic
+uv run mypy app tests
+uv run pytest -q
 ```
 
 Then validate the frontend:
@@ -72,7 +92,7 @@ Then validate the frontend:
 ```bash
 cd frontend
 npm run lint
-npm run build
+npm run build -- --webpack
 ```
 
 ## Typical first-use flow

@@ -15,6 +15,23 @@ Use the generated documentation as the canonical request/response reference for 
 
 ## Route areas
 
+| Method | Path | Authentication | Purpose |
+|---|---|---|---|
+| `GET` | `/` | No | Container/load-balancer liveness response |
+| `GET` | `/api/v1/health/` | No | API readiness response |
+| `POST` | `/api/v1/auth/register` | No | Create a user |
+| `POST` | `/api/v1/auth/login` | No | Issue a bearer token |
+| `POST` | `/api/v1/upload/` | Bearer token | Upload and synchronously ingest a PDF |
+| `GET` | `/api/v1/documents/` | Bearer token | List the current user's documents |
+| `DELETE` | `/api/v1/documents/{document_id}` | Bearer token | Delete an owned document and its vectors |
+| `POST` | `/api/v1/chat/sessions/` | Bearer token | Create a chat session |
+| `GET` | `/api/v1/chat/sessions/` | Bearer token | List owned chat sessions |
+| `GET` | `/api/v1/chat/sessions/{session_id}` | Bearer token | Read one owned session |
+| `GET` | `/api/v1/chat/sessions/{session_id}/messages` | Bearer token | List session messages |
+| `PATCH` | `/api/v1/chat/sessions/{session_id}` | Bearer token | Rename a session |
+| `DELETE` | `/api/v1/chat/sessions/{session_id}` | Bearer token | Delete a session |
+| `POST` | `/api/v1/chat/` | Bearer token | Ask a grounded question |
+
 ### Authentication
 
 Registration and login routes create users and issue JWT bearer tokens.
@@ -24,6 +41,8 @@ Registration and login routes create users and issue JWT bearer tokens.
 The upload endpoint accepts a PDF, saves it, determines PDF metadata, creates the PostgreSQL document record, runs ingestion/indexing, and attempts document-profile generation.
 
 Duplicate file hashes are rejected.
+
+Upload and ingestion currently happen in the request lifecycle. Large PDFs can therefore take longer than ordinary API requests; clients should display an in-progress state and use an appropriate request timeout.
 
 ### Documents
 
@@ -55,6 +74,20 @@ Protected endpoints require:
 
 ```text
 Authorization: Bearer <access-token>
+```
+
+The frontend stores the returned token in browser storage and sends it with protected requests. Do not log or expose bearer tokens.
+
+## Example health check
+
+```bash
+curl http://127.0.0.1:8000/api/v1/health/
+```
+
+Expected response:
+
+```json
+{"status":"healthy","service":"book-rag-api"}
 ```
 
 ## Error behavior
