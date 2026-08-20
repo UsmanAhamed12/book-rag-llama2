@@ -151,7 +151,7 @@ export default function DocumentsPage() {
       <div className="space-y-8">
         {/* Header Title Section */}
         <div>
-          <h2 className="text-3xl font-heading font-extrabold tracking-tight bg-linear-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
+          <h2 className="font-heading text-3xl font-extrabold tracking-tight text-foreground">
             Documents Indexer
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">

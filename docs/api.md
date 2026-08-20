@@ -1,6 +1,7 @@
 # API Guide
 
 The backend is a FastAPI application with versioned routes under `/api/v1`.
+The deployed readiness endpoint is `GET /api/v1/health/`.
 
 ## Interactive documentation
 

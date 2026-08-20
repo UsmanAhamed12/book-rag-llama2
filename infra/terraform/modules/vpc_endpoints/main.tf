@@ -29,6 +29,7 @@ locals {
     "ecr.dkr",
     "logs",
     "secretsmanager",
+    "bedrock-runtime",
   ])
 }
 

@@ -38,6 +38,16 @@ output "backend_ecr_repository_url" {
   value       = module.ecr.backend_repository_url
 }
 
+output "frontend_ecr_repository_name" {
+  description = "Frontend ECR repository name."
+  value       = module.ecr.frontend_repository_name
+}
+
+output "frontend_ecr_repository_url" {
+  description = "Frontend ECR repository URL."
+  value       = module.ecr.frontend_repository_url
+}
+
 output "database_endpoint" {
   description = "RDS PostgreSQL endpoint."
   value       = module.database.database_endpoint
@@ -72,4 +82,24 @@ output "vpc_interface_endpoint_ids" {
 output "s3_vpc_endpoint_id" {
   description = "S3 gateway VPC endpoint ID."
   value       = module.vpc_endpoints.s3_endpoint_id
+}
+
+output "ecs_cluster_name" {
+  description = "ECS cluster name."
+  value       = module.ecs.cluster_name
+}
+
+output "api_service_name" {
+  description = "API ECS service name."
+  value       = module.ecs.api_service_name
+}
+
+output "frontend_service_name" {
+  description = "Frontend ECS service name."
+  value       = module.ecs.frontend_service_name
+}
+
+output "live_app_url" {
+  description = "Public HTTPS URL for the deployed application."
+  value       = module.ecs.live_url
 }

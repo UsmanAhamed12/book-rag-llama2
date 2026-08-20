@@ -1,128 +1,77 @@
-# Project Architecture
+# Architecture
 
-Book RAG Assistant uses a layered full-stack architecture that separates HTTP/API concerns, application services, relational persistence, vector retrieval, local LLM inference, and the web UI.
+Book RAG separates product UI, API workflows, retrieval, generation, relational persistence, and vector storage. The same application code supports a local Ollama environment and an AWS Bedrock environment.
 
-## System view
-
-```text
-+-----------------------+
-|      End User         |
-+-----------+-----------+
-            |
-            v
-+-----------------------+
-| Next.js / React UI    |
-| TypeScript            |
-+-----------+-----------+
-            |
-            | HTTP JSON + JWT
-            v
-+-----------------------+
-| FastAPI API (/api/v1) |
-+----+-------------+----+
-     |             |
-     |             +--------------------------+
-     v                                        v
-+-------------------+               +---------------------+
-| App Services      |               | Authentication      |
-| Documents / Chat  |               | JWT / password hash |
-+---------+---------+               +----------+----------+
-          |                                    |
-          v                                    v
-+-------------------+                 +-------------------+
-| Ingestion / RAG   |<--------------->| PostgreSQL        |
-+----+----------+---+                 | users/docs/chats  |
-     |          |                     +-------------------+
-     |          |
-     v          v
-+---------+  +------------------+
-| Chroma  |  | Ollama           |
-| vectors |  | Llama 3.2        |
-+---------+  +------------------+
-```
-
-## Repository layout
+## Runtime topology
 
 ```text
-book-rag-llama2/
-├── app/
-│   ├── api/                     # FastAPI routing and dependencies
-│   │   └── v1/routes/           # Active versioned endpoints
-│   ├── core/                    # Settings, security, logging, DI/container
-│   ├── db/                      # PostgreSQL/Chroma infrastructure
-│   ├── embeddings/              # Embedding provider/service
-│   ├── ingestion/               # PDF loader, cleaning, chunking, pipeline
-│   ├── llm/                     # Ollama client and LLM service
-│   ├── models/                  # Domain and SQLAlchemy models
-│   ├── rag/                     # Prompt and RAG pipeline
-│   ├── retrieval/               # Retriever and retrieval models
-│   ├── schemas/                 # Pydantic API contracts
-│   ├── services/                # Application use cases
-│   └── vectorstores/            # Vector-store adapter(s)
-├── alembic/                     # Relational DB migrations
-├── data/                        # Local runtime storage
-├── docker/                      # Container configuration
-├── docs/                        # Engineering documentation
-├── frontend/                    # Next.js/React/TypeScript frontend
-├── frontend_streamlit_backup/   # Historical Streamlit UI backup
-├── tests/                       # pytest suite
-├── .github/workflows/           # CI
-├── pyproject.toml               # Python dependencies/tooling
-└── uv.lock                      # Locked Python dependency graph
+Browser
+  |
+  | HTTPS
+  v
+CloudFront
+  |
+  v
+Application Load Balancer
+  |-- /* --------> Next.js on ECS Fargate
+  `-- /api/* ----> FastAPI on ECS Fargate
+                         |-- RDS PostgreSQL
+                         |-- encrypted EFS (uploads + ChromaDB)
+                         `-- Bedrock Runtime VPC endpoint -> Amazon Nova
 ```
 
-## Backend layers
+The load balancer accepts traffic only from the AWS-managed CloudFront origin-facing prefix list. ECS tasks, RDS, EFS mount targets, and interface endpoints live inside the VPC; application tasks do not receive public IP addresses.
 
-### API
+## Request flow
 
-`app/api/v1/routes/` exposes the active HTTP interface. Routes should handle request validation, authentication dependencies, response construction, and HTTP-specific errors while delegating reusable business behavior.
+1. CloudFront terminates viewer HTTPS and forwards dynamic requests without caching application or authorization state.
+2. The load balancer routes `/api/*` requests to FastAPI and all remaining paths to Next.js.
+3. The frontend stores the bearer token in the browser and calls the same public origin, avoiding cross-origin deployment complexity.
+4. FastAPI validates the user and scopes documents, sessions, messages, and retrieval filters to that user.
+5. PostgreSQL stores durable entities; ChromaDB stores embeddings and citation metadata on EFS.
+6. The LLM service selects Ollama or Bedrock from configuration without changing the RAG pipeline.
 
-### Services
+## Backend boundaries
 
-`app/services/` contains use-case logic such as document management, chat memory, upload behavior, and document-profile workflows.
+| Package | Responsibility |
+|---|---|
+| `app/api` | HTTP routing, validation, dependencies, response contracts |
+| `app/services` | Document, upload, memory, and application workflows |
+| `app/ingestion` | PDF extraction, cleaning, chunking, indexing |
+| `app/embeddings` | Query/document embedding abstraction |
+| `app/retrieval` | Vector candidates, reranking, score fusion |
+| `app/rag` | Query rewrite, relevance gate, prompt, citations |
+| `app/llm` | Ollama and Amazon Bedrock clients |
+| `app/db` and `app/models` | Persistence infrastructure and entities |
 
-### Ingestion
+Routes remain thin, user-owned queries must include ownership scope, and API contracts remain typed. PostgreSQL and ChromaDB have deliberately different responsibilities: relational consistency versus similarity search.
 
-The ingestion layer converts PDFs into searchable chunks:
+## Frontend structure
 
-```text
-PDF -> page extraction -> cleaning -> recursive chunking -> embeddings -> ChromaDB
-```
+`frontend/app` contains Next.js routes and `frontend/components` contains reusable product primitives. The authenticated shell supplies responsive navigation, theme controls, identity, and session actions. The main workflows are:
 
-Relational metadata is persisted separately in PostgreSQL.
+- overview and recent activity;
+- PDF library upload, processing, selection, and removal;
+- chat session creation and switching;
+- grounded answers with readable source cards and mobile-safe interaction states.
 
-### Retrieval
+## Data and durability
 
-The retrieval layer performs semantic search against ChromaDB and returns typed retrieval results containing text, similarity score, and citation metadata.
+- RDS PostgreSQL stores users, documents, chat sessions, messages, and citation JSON.
+- EFS persists uploads and the ChromaDB directory across Fargate task replacements.
+- ECR repositories are immutable and lifecycle-managed.
+- Secrets Manager injects the application signing key and RDS-generated credentials at task startup.
+- CloudWatch log groups retain frontend and API container logs.
 
-### RAG
+## Deployment properties
 
-The RAG layer combines bounded conversation context, query rewriting, document-scoped retrieval, relevance filtering, prompt construction, local generation, citation creation, and chat persistence.
+Terraform owns networking, endpoints, RDS, EFS, IAM, ECR, ECS, the load balancer, and CloudFront. ECS deployment circuit breakers provide rollback behavior when a new task cannot become healthy. See [deployment.md](deployment.md) for operational commands.
 
-### LLM
+## Engineering rules
 
-The LLM service abstracts calls to Ollama. The default configured model is `llama3.2`, allowing the core generation workflow to run locally.
-
-### Persistence
-
-PostgreSQL stores durable application entities and ownership relationships. ChromaDB stores embeddings/vector-search metadata. These systems have different responsibilities and should not be conflated.
-
-## Frontend
-
-`frontend/` is the active Next.js application. It communicates with FastAPI over HTTP, sends bearer authentication for protected requests, and provides document/chat workflows. The older Streamlit implementation is retained only as a backup/history artifact.
-
-## Design rules
-
-- New active endpoints belong under `app/api/v1/routes/`.
-- Route handlers should remain thin.
-- Reusable workflows belong in services/pipelines.
-- SQLAlchemy entities belong in `app/models/database/`.
-- API contracts belong in `app/schemas/`.
-- Retrieval and ingestion should remain independently testable.
-- User-owned resources must be scoped by authenticated user ID.
-- Runtime data, secrets, uploaded private PDFs, logs, caches, and vector indexes must not be committed.
-- Tests must be self-contained and CI-portable.
-
-## Quality boundary
-
-Changes are validated through Ruff, strict mypy, pytest, frontend checks, Docker build validation, and GitHub Actions. This quality gate is part of the architecture because it protects contracts between layers as the project grows.
+- Never mix one user's document IDs or chat history into another user's query.
+- Treat retrieved document content as untrusted data, not prompt instructions.
+- Keep model/provider details behind the LLM service boundary.
+- Persist only citations that were actually supplied to generation.
+- Keep secrets, uploads, indexes, caches, and Terraform plan files out of version control.
+- Validate changes with backend, frontend, container, and Terraform quality gates.

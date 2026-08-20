@@ -94,6 +94,8 @@ def test_reranking_retriever_reranks_vector_candidates() -> None:
     )
 
     assert [result.text for result in reranked] == ["second", "third"]
+    assert reranked[0].score == pytest.approx(0.94)
+    assert reranked[1].score == pytest.approx(0.56)
     assert base.search_top_k == 3
     assert reranker.received_pairs == [
         ("question", "first"),
@@ -135,6 +137,15 @@ def test_reranking_retriever_rejects_invalid_candidate_k() -> None:
             FakeBaseRetriever([]),
             FakeReranker([]),
             candidate_k=0,
+        )
+
+
+def test_reranking_retriever_rejects_invalid_weight() -> None:
+    with pytest.raises(ValueError, match="reranker_weight"):
+        RerankingRetriever(
+            FakeBaseRetriever([]),
+            FakeReranker([]),
+            reranker_weight=1.1,
         )
 
 

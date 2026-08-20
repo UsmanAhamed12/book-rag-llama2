@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import TypedDict
 
+from app.core.settings import settings
 from app.llm.service import LLMService
 from app.rag.prompt import SYSTEM_PROMPT
 from app.retrieval.models import RetrievalResult
@@ -16,7 +17,7 @@ class RAGAnswerPayload(TypedDict):
 class RAGPipeline:
     """Build grounded answers from the most relevant book chunks."""
 
-    minimum_context_score = 0.35
+    minimum_context_score = settings.retrieval_minimum_score
 
     def __init__(self, retriever: Retriever, llm: LLMService) -> None:
         self.retriever = retriever

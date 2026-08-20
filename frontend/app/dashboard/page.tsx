@@ -107,7 +107,7 @@ export default function DashboardPage() {
         {/* Welcome Section */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-3xl font-heading font-extrabold tracking-tight bg-linear-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
+            <h2 className="font-heading text-3xl font-extrabold tracking-tight text-foreground">
               Welcome back
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">

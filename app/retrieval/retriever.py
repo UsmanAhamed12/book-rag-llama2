@@ -86,7 +86,7 @@ class Retriever:
                 ],
             }
 
-        query_embedding = self.embedding_provider.embed([query])[0]
+        query_embedding = self.embedding_provider.embed_query(query)
 
         normalized_query: list[Sequence[float]] = [query_embedding]
 
@@ -152,7 +152,7 @@ class Retriever:
         per_document_k: int = 4,
         score_threshold: float | None = None,
     ) -> list[RetrievalResult]:
-        query_embedding = self.embedding_provider.embed([query])[0]
+        query_embedding = self.embedding_provider.embed_query(query)
 
         normalized_query: list[Sequence[float]] = [query_embedding]
 

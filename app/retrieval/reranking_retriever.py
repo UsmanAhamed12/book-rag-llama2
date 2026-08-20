@@ -17,13 +17,29 @@ class RerankingRetriever(Retriever):
         base_retriever: Retriever,
         reranker: CrossEncoderLike,
         candidate_k: int = 20,
+        reranker_weight: float = 0.7,
     ) -> None:
         if candidate_k <= 0:
             raise ValueError("candidate_k must be greater than zero")
+        if not 0.0 <= reranker_weight <= 1.0:
+            raise ValueError("reranker_weight must be between zero and one")
 
         self.base_retriever = base_retriever
         self.reranker = reranker
         self.candidate_k = candidate_k
+        self.reranker_weight = reranker_weight
+
+    @staticmethod
+    def _normalize_scores(scores: Sequence[float]) -> list[float]:
+        numeric_scores = [float(score) for score in scores]
+        minimum = min(numeric_scores)
+        maximum = max(numeric_scores)
+
+        if maximum == minimum:
+            return [0.5 for _ in numeric_scores]
+
+        score_range = maximum - minimum
+        return [(score - minimum) / score_range for score in numeric_scores]
 
     def search(
         self,
@@ -55,13 +71,25 @@ class RerankingRetriever(Retriever):
                 "reranker returned a different number of scores than candidates"
             )
 
+        normalized_reranker_scores = self._normalize_scores(scores)
+        vector_weight = 1.0 - self.reranker_weight
+
+        for candidate, reranker_score in zip(
+            candidates,
+            normalized_reranker_scores,
+            strict=True,
+        ):
+            candidate.score = (
+                self.reranker_weight * reranker_score + vector_weight * candidate.score
+            )
+
         ranked = sorted(
-            zip(candidates, scores, strict=True),
-            key=lambda item: float(item[1]),
+            candidates,
+            key=lambda candidate: candidate.score,
             reverse=True,
         )
 
-        return [candidate for candidate, _ in ranked[:top_k]]
+        return ranked[:top_k]
 
     def search_balanced(
         self,

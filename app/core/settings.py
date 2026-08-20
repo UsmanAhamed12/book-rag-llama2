@@ -40,8 +40,11 @@ class Settings(BaseSettings):
         )
 
     # Ollama
+    llm_provider: str = "ollama"
     ollama_model: str = "llama3.2"
     ollama_host: str = "http://localhost:11434"
+    bedrock_model: str = "apac.amazon.nova-lite-v1:0"
+    bedrock_region: str = "ap-south-1"
 
     # Embeddings
     embedding_model: str = "BAAI/bge-small-en-v1.5"
@@ -51,6 +54,8 @@ class Settings(BaseSettings):
     reranker_model: str = "cross-encoder/ms-marco-MiniLM-L6-v2"
     retrieval_candidate_k: int = 10
     retrieval_top_k: int = 5
+    retrieval_minimum_score: float = 0.35
+    reranker_weight: float = 0.7
 
     # Storage
     chroma_db_path: str = "data/chroma"

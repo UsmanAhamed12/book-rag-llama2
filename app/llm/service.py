@@ -1,11 +1,24 @@
+from typing import Protocol
+
+from app.core.settings import settings
+from app.llm.bedrock_client import BedrockClient
 from app.llm.ollama_client import OllamaClient
 from app.rag.document_summary_prompt import DOCUMENT_SUMMARY_PROMPT
 from app.rag.query_rewriter import QUERY_REWRITE_PROMPT
 
 
+class TextGenerationClient(Protocol):
+    def generate(self, prompt: str) -> str: ...
+
+    def generate_or_none(self, prompt: str) -> str | None: ...
+
+
 class LLMService:
     def __init__(self) -> None:
-        self.client = OllamaClient()
+        if settings.llm_provider.lower() == "bedrock":
+            self.client: TextGenerationClient = BedrockClient()
+        else:
+            self.client = OllamaClient()
 
     def answer(
         self,

@@ -1,28 +1,36 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "Book RAG Assistant",
-  description: "Chat with your uploaded books using RAG.",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+  ),
+  title: {
+    default: "Book RAG — Grounded answers from your documents",
+    template: "%s · Book RAG",
+  },
+  description:
+    "Upload PDF books, ask natural-language questions, and get evidence-backed answers with page-level citations.",
+  openGraph: {
+    title: "Book RAG — Grounded answers from your documents",
+    description: "Grounded answers. Page-level proof.",
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Book RAG" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Book RAG — Grounded answers from your documents",
+    description: "Grounded answers. Page-level proof.",
+    images: ["/og.png"],
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className="h-full antialiased"
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
@@ -33,6 +41,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           disableTransitionOnChange
         >
           {children}
+          <Toaster richColors position="top-right" />
         </ThemeProvider>
       </body>
     </html>

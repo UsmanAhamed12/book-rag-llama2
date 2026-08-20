@@ -13,6 +13,7 @@ import {
   Database,
   Layers,
   Sparkles,
+  ShieldCheck,
 } from "lucide-react";
 import { FormEvent, useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
@@ -107,8 +108,11 @@ export default function ChatPage() {
         setSessions(sessionData);
         setDocuments(documentData);
 
-        // Auto-select all documents by default
-        setSelectedDocumentIds(documentData.map((doc) => doc.id));
+        setSelectedDocumentIds(
+          documentData
+            .filter((document) => document.status === "completed")
+            .map((document) => document.id),
+        );
 
         if (sessionData.length > 0) {
           const firstSessionId = sessionData[0].id;
@@ -271,14 +275,33 @@ export default function ChatPage() {
     setSending(true);
     setError("");
 
+    const optimisticMessage: ChatMessage = {
+      id: -Date.now(),
+      role: "user",
+      message: trimmedQuestion,
+      sources: [],
+      created_at: new Date().toISOString(),
+    };
+
+    setMessages((current) => [...current, optimisticMessage]);
+    setQuestion("");
+
     try {
-      await sendChatMessage({
+      const response = await sendChatMessage({
         session_id: activeSessionId,
         question: trimmedQuestion,
         document_ids: selectedDocumentIds,
       });
 
-      setQuestion("");
+      const assistantMessage: ChatMessage = {
+        id: -(Date.now() + 1),
+        role: "assistant",
+        message: response.answer,
+        sources: response.sources,
+        created_at: new Date().toISOString(),
+      };
+
+      setMessages((current) => [...current, assistantMessage]);
 
       const activeSession = sessions.find((s) => s.id === activeSessionId);
       if (activeSession && (!activeSession.title || activeSession.title === "New Chat")) {
@@ -295,9 +318,11 @@ export default function ChatPage() {
         }
       }
 
-      const updatedMessages = await getChatMessages(activeSessionId);
-      setMessages(updatedMessages);
     } catch {
+      setMessages((current) =>
+        current.filter((message) => message.id !== optimisticMessage.id),
+      );
+      setQuestion(trimmedQuestion);
       setError("Unable to send your question.");
     } finally {
       setSending(false);
@@ -305,10 +330,15 @@ export default function ChatPage() {
   }
 
   const activeSession = sessions.find((s) => s.id === activeSessionId);
+  const suggestedQuestions = [
+    "Summarize the key ideas",
+    "What evidence supports the main argument?",
+    "Compare the selected documents",
+  ];
 
   return (
     <AppShell>
-      <div className="mx-auto flex h-[calc(100vh-7rem)] max-w-7xl gap-6 overflow-hidden">
+      <div className="mx-auto flex h-[calc(100dvh-7rem)] max-w-[90rem] gap-5 overflow-hidden">
         {/* Chat History Sidebar */}
         <aside className="hidden w-72 shrink-0 flex-col rounded-2xl border border-border/40 bg-sidebar/50 backdrop-blur-md lg:flex">
           <div className="p-4">
@@ -412,14 +442,50 @@ export default function ChatPage() {
         {/* Chat Interface Panel */}
         <section className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border/40 bg-sidebar/20 backdrop-blur-md">
           {/* Active Chat Header */}
-          <div className="flex items-center justify-between border-b border-border/40 px-6 py-4 bg-background/50">
-            <div>
+          <div className="flex items-center justify-between gap-3 border-b border-border/70 bg-background/70 px-4 py-3 sm:px-6">
+            <div className="min-w-0">
               <h2 className="font-heading font-bold text-sm tracking-tight">
                 {activeSession?.title || "AI Chat Assistant"}
               </h2>
-              <p className="text-[10px] text-muted-foreground mt-0.5">
-                Ask questions grounded in vector-embedded context documents
+              <p className="mt-0.5 hidden text-xs text-muted-foreground sm:block">
+                Answers are generated only from your selected documents
               </p>
+            </div>
+
+            <div className="flex items-center gap-2 lg:hidden">
+              <label htmlFor="mobile-session" className="sr-only">
+                Active conversation
+              </label>
+              <select
+                id="mobile-session"
+                value={activeSessionId ?? ""}
+                onChange={(event) =>
+                  void handleSelectSession(Number(event.target.value))
+                }
+                className="h-8 max-w-36 rounded-lg border border-border bg-background px-2 text-xs"
+              >
+                <option value="" disabled>
+                  Conversations
+                </option>
+                {sessions.map((session) => (
+                  <option key={session.id} value={session.id}>
+                    {session.title || "Untitled chat"}
+                  </option>
+                ))}
+              </select>
+              <Button
+                size="icon"
+                variant="outline"
+                onClick={handleNewChat}
+                disabled={creatingChat}
+                aria-label="Create a new conversation"
+              >
+                {creatingChat ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Plus className="size-4" />
+                )}
+              </Button>
             </div>
 
             {/* Document Grounding Toggle Drawer */}
@@ -433,7 +499,9 @@ export default function ChatPage() {
                 }
               >
                 <Layers className="size-3.5 text-primary" />
-                <span>Grounding: {selectedDocumentIds.length} PDFs</span>
+                <span className="hidden sm:inline">
+                  {selectedDocumentIds.length} sources
+                </span>
               </SheetTrigger>
 
               <SheetContent side="right" className="w-95 sm:max-w-md p-6 glass-panel border-l border-white/5">
@@ -524,7 +592,10 @@ export default function ChatPage() {
           </div>
 
           {/* Main Chat Feed */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
+          <div
+            className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 scrollbar-thin"
+            aria-live="polite"
+          >
             {error ? (
               <div className="rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-xs text-destructive flex items-start gap-2 animate-in fade-in duration-200">
                 <span>⚠️</span>
@@ -566,12 +637,25 @@ export default function ChatPage() {
                 <div className="flex size-12 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-400 mb-4 animate-bounce">
                   <BookOpen className="size-6" />
                 </div>
-                <h3 className="font-heading font-bold text-sm text-foreground/90">
+                <h3 className="font-heading text-base font-semibold text-foreground/90">
                   Ask your first question
                 </h3>
-                <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
-                  The model will pull semantic chunks from your selected books and formulate a precise response with cited sources.
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  Book RAG retrieves the most relevant passages and returns a
+                  focused answer with page-level evidence.
                 </p>
+                <div className="mt-5 flex flex-wrap justify-center gap-2">
+                  {suggestedQuestions.map((suggestion) => (
+                    <button
+                      key={suggestion}
+                      type="button"
+                      onClick={() => setQuestion(suggestion)}
+                      className="rounded-full border border-border bg-background px-3 py-1.5 text-xs text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
               </div>
             ) : (
               <div className="space-y-6">
@@ -592,7 +676,7 @@ export default function ChatPage() {
 
                       <div
                         className={[
-                          "max-w-[85%] rounded-2xl px-4 py-3 text-xs leading-relaxed shadow-sm border",
+                          "max-w-[90%] rounded-2xl border px-4 py-3 text-sm leading-6 shadow-sm sm:max-w-[82%]",
                           isUser
                             ? "bg-primary text-primary-foreground border-transparent rounded-tr-none shadow-indigo-500/5"
                             : "bg-card text-card-foreground border-border/40 rounded-tl-none",
@@ -653,18 +737,26 @@ export default function ChatPage() {
           </div>
 
           {/* Chat Form Area */}
-          <form onSubmit={handleSubmit} className="border-t border-border/40 p-4 bg-background/50">
-            <div className="flex items-center gap-2 relative bg-background border border-border/50 rounded-xl px-3 py-1.5 focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/10 transition duration-200">
-              <Input
+          <form onSubmit={handleSubmit} className="border-t border-border/70 bg-background/80 p-3 sm:p-4">
+            <div className="relative flex items-end gap-2 rounded-2xl border border-border bg-background px-3 py-2 shadow-sm transition focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/10">
+              <textarea
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    event.currentTarget.form?.requestSubmit();
+                  }
+                }}
                 placeholder={
                   selectedDocumentIds.length > 0
                     ? "Ask a question about your selected documents..."
                     : "Select at least one document first..."
                 }
                 disabled={sending || activeSessionId === null || selectedDocumentIds.length === 0}
-                className="flex-1 bg-transparent border-0 ring-0 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-1 text-xs h-9"
+                rows={1}
+                aria-label="Ask a question"
+                className="max-h-36 min-h-10 flex-1 resize-none bg-transparent px-1 py-2 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-60"
               />
 
               <Button
@@ -676,7 +768,8 @@ export default function ChatPage() {
                   selectedDocumentIds.length === 0 ||
                   !question.trim()
                 }
-                className="size-8 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-indigo-500/10"
+                className="mb-1 size-9 rounded-xl"
+                aria-label="Send question"
               >
                 {sending ? (
                   <Loader2 className="size-4 animate-spin" />
@@ -686,9 +779,14 @@ export default function ChatPage() {
               </Button>
             </div>
 
-            <div className="mt-2.5 flex items-center justify-between text-[10px] text-muted-foreground px-1">
-              <span>Verified Answers only. AI references context matches.</span>
-              <span>{selectedDocumentIds.length} sources active</span>
+            <div className="mt-2.5 flex items-center justify-between gap-3 px-1 text-[11px] text-muted-foreground">
+              <span className="flex items-center gap-1.5">
+                <ShieldCheck className="size-3 text-emerald-500" />
+                Grounded answers with citations
+              </span>
+              <span className="hidden sm:inline">
+                Enter to send · Shift + Enter for a new line
+              </span>
             </div>
           </form>
         </section>

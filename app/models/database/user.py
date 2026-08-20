@@ -14,16 +14,15 @@ class UserDB(Base):
         email: str,
         password_hash: str | None = None,
         hashed_password: str | None = None,
-        **kwargs: object,
     ) -> None:
-        kwargs.setdefault("email", email)
-
-        if password_hash is not None:
-            kwargs["hashed_password"] = password_hash
-        elif hashed_password is not None:
-            kwargs["hashed_password"] = hashed_password
-
         super().__init__()
+
+        resolved_password_hash = password_hash or hashed_password
+        if resolved_password_hash is None:
+            raise ValueError("A password hash is required")
+
+        self.email = email
+        self.hashed_password = resolved_password_hash
 
     id: Mapped[int] = mapped_column(primary_key=True)
 

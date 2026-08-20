@@ -21,8 +21,11 @@
 - pytest suite
 - Docker build validation
 - GitHub Actions CI
+- query-aware BGE embeddings and cross-encoder score fusion
+- responsive product UI and mobile chat workflows
+- Terraform-managed AWS deployment on CloudFront and ECS Fargate
 
-## Phase 1 — Retrieval quality
+## Next — Measured retrieval quality
 
 - create a fixed evaluation question set;
 - measure retrieval relevance/recall;
@@ -40,14 +43,13 @@
 - failure/no-context evaluation;
 - regression benchmark stored in CI-friendly fixtures.
 
-## Phase 3 — Product polish
+## Next — Product evolution
 
-- improved upload/processing UX;
-- richer document library;
-- source/citation viewer;
-- loading/error/empty states;
-- responsive frontend;
-- chat/session UX improvements.
+- streaming answers;
+- a full-page source/citation reader;
+- background ingestion progress;
+- keyboard shortcuts and saved prompt templates;
+- verified email and account recovery.
 
 ## Phase 4 — Production hardening
 
@@ -60,18 +62,16 @@
 - production secret management;
 - authorization/security tests.
 
-## Phase 5 — Deployment
+## Next — Delivery automation
 
-- finalize container/service topology;
-- deploy backend/database/vector persistence;
-- deploy frontend;
-- configure HTTPS/domain;
-- CI/CD deployment workflow;
-- monitoring and rollback strategy.
+- custom domain and ACM certificate;
+- remote Terraform state and locking;
+- CI/CD image promotion and environment approvals;
+- synthetic monitoring and rollback drills.
 
 ## Optional advanced work
 
-- reranking/hybrid retrieval;
+- hybrid lexical/vector retrieval;
 - background ingestion jobs;
 - streaming responses;
 - model/provider abstraction;

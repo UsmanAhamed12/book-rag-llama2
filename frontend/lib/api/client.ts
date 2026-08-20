@@ -59,7 +59,10 @@ function handleUnauthorized(): void {
 async function getErrorMessage(
   response: Response,
 ): Promise<string> {
-  let message = "Request failed";
+  let message =
+    response.status >= 500
+      ? "The server could not complete your request. Please try again."
+      : "Request failed";
 
   try {
     const body: unknown =
@@ -81,6 +84,15 @@ async function getErrorMessage(
         "string"
       ) {
         message = detail;
+      } else if (
+        Array.isArray(detail) &&
+        detail.length > 0 &&
+        typeof detail[0] === "object" &&
+        detail[0] !== null &&
+        "msg" in detail[0] &&
+        typeof detail[0].msg === "string"
+      ) {
+        message = detail[0].msg;
       }
     }
   } catch {

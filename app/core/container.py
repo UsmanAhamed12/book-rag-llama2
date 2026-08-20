@@ -42,6 +42,7 @@ class Container:
                 base_retriever=self.vector_retriever,
                 reranker=self.reranker_provider,
                 candidate_k=settings.retrieval_candidate_k,
+                reranker_weight=settings.reranker_weight,
             )
         else:
             self.retriever = self.vector_retriever

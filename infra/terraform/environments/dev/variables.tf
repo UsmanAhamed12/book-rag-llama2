@@ -66,3 +66,26 @@ variable "database_instance_class" {
   type        = string
   default     = "db.t4g.micro"
 }
+
+variable "backend_image_tag" {
+  description = "Immutable ECR image tag deployed to ECS."
+  type        = string
+  default     = "production"
+}
+
+variable "frontend_image_tag" {
+  description = "Immutable frontend ECR image tag deployed to ECS."
+  type        = string
+  default     = "production"
+}
+
+variable "app_secret_arn" {
+  description = "Secrets Manager ARN containing application secrets."
+  type        = string
+}
+
+variable "bedrock_model" {
+  description = "Amazon Bedrock inference profile for generation."
+  type        = string
+  default     = "apac.amazon.nova-lite-v1:0"
+}

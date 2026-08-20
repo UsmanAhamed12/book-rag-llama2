@@ -1,146 +1,75 @@
-# Book RAG Assistant
+# Book RAG
 
-A full-stack, local-first Retrieval-Augmented Generation (RAG) application for uploading PDF books, indexing their content, and asking grounded questions with source citations.
+**Ask questions across PDF books and get grounded answers with page-level evidence.**
 
-The project combines a FastAPI backend, PostgreSQL metadata and chat persistence, ChromaDB vector search, sentence-transformer embeddings, Ollama/Llama 3.2 generation, and a Next.js frontend. It is designed as a production-style portfolio project with strict typing, automated tests, Docker support, and GitHub Actions CI.
+[Open the live app](https://d1n9699wkr1rp7.cloudfront.net) · [API guide](docs/api.md) · [Architecture](docs/architecture.md) · [Deployment](docs/deployment.md)
 
-## Features
+![Book RAG product card](frontend/public/og.png)
 
-- PDF upload, validation, parsing, cleaning, chunking, and indexing
-- Semantic retrieval with ChromaDB
-- Local embeddings with `BAAI/bge-small-en-v1.5`
-- Local LLM inference through Ollama using `llama3.2`
-- Grounded RAG answers with file/page/chunk citations
-- Multi-document selection and document summaries
-- JWT authentication
-- PostgreSQL document, user, chat-session, and message persistence
-- Chat history and session management
-- Next.js frontend
-- FastAPI OpenAPI/Swagger API documentation
-- Ruff formatting/linting, strict mypy, pytest
-- Docker and GitHub Actions CI
+Book RAG is a production-oriented retrieval-augmented generation application. Users can create an account, upload PDFs, organize a private document library, and have multi-turn conversations backed by selected books. The application returns citations for the exact source, page, and chunk used to produce each answer.
 
-## Architecture
+## Highlights
+
+- Professional responsive Next.js interface with light/dark themes and mobile navigation
+- Private, user-scoped document libraries and chat histories
+- PDF validation, extraction, cleaning, recursive chunking, and persistent indexing
+- BGE query/document embeddings with document-scoped ChromaDB search
+- Cross-encoder reranking plus calibrated vector/reranker score fusion
+- Relevance gating and a grounded prompt that treats document text as untrusted data
+- Page-level source citations and an explicit no-context fallback
+- Local Ollama generation for development and Amazon Bedrock Nova for AWS
+- Fully managed AWS deployment through Terraform
+- Strict Ruff, mypy, pytest, ESLint, and production-build quality gates
+
+## How it works
 
 ```text
-User
-  |
-  v
-Next.js Frontend
-  |
-  | HTTP / JSON + JWT
-  v
-FastAPI API
-  |
-  +--> Authentication --------> PostgreSQL
-  |
-  +--> PDF Upload / Ingestion
-  |       |
-  |       +--> PDF Loader -> Cleaner -> Recursive Chunker
-  |       |                              |
-  |       |                              v
-  |       +------------------------> Embedding Service
-  |                                      |
-  |                                      v
-  |                                   ChromaDB
-  |
-  +--> Chat / RAG Pipeline
-          |
-          +--> Query Rewrite / Chat History
-          +--> Retriever ------------> ChromaDB
-          +--> Prompt Builder
-          +--> Ollama / Llama 3.2
-          +--> Answer + Citations ----> PostgreSQL
+PDF upload
+  -> page extraction -> cleaning -> recursive chunks
+  -> BGE document embeddings -> ChromaDB + EFS
+
+Question + selected documents
+  -> BGE query embedding -> candidate retrieval
+  -> cross-encoder reranking -> calibrated score fusion
+  -> relevance gate -> grounded prompt
+  -> Ollama (local) or Amazon Bedrock (AWS)
+  -> answer + page citations -> PostgreSQL
 ```
 
-See [docs/architecture.md](docs/architecture.md) for the detailed architecture.
+The AWS environment serves one HTTPS origin through CloudFront. An Application Load Balancer routes `/api/*` to FastAPI and all other requests to Next.js. Both ECS Fargate services run in private subnets; PostgreSQL is hosted in RDS, vector/upload data is mounted from encrypted EFS, secrets come from Secrets Manager, and Bedrock is reached through a private VPC endpoint.
 
-## Technology Stack
+## Technology
 
-| Layer | Technology |
+| Area | Stack |
 |---|---|
-| Backend | Python 3.12, FastAPI, Pydantic |
-| Package management | uv |
-| Relational database | PostgreSQL, SQLAlchemy, Alembic |
-| Vector database | ChromaDB |
-| Embeddings | Sentence Transformers / BAAI bge-small-en-v1.5 |
-| LLM | Ollama / Llama 3.2 |
-| PDF processing | PyPDF, PyMuPDF |
-| Authentication | JWT, python-jose, password hashing |
-| Frontend | Next.js, React, TypeScript |
-| Testing | pytest |
-| Quality | Ruff, mypy strict mode |
-| DevOps | Docker, GitHub Actions |
+| Web | Next.js 16, React 19, TypeScript, Tailwind CSS, shadcn/ui |
+| API | Python 3.12, FastAPI, Pydantic, SQLAlchemy, Alembic |
+| Retrieval | BAAI BGE, ChromaDB, sentence-transformers cross-encoder |
+| Generation | Ollama/Llama locally; Amazon Bedrock Nova on AWS |
+| Data | PostgreSQL, ChromaDB, EFS |
+| Infrastructure | Docker, ECR, ECS Fargate, ALB, CloudFront, RDS, EFS, Terraform |
+| Quality | Ruff, strict mypy, pytest, ESLint, Next.js production build |
 
-## Repository Structure
+## Run locally
 
-```text
-book-rag-llama2/
-├── app/                    # FastAPI backend
-│   ├── api/                # Routes and dependencies
-│   ├── core/               # Settings, security, DI/container
-│   ├── db/                 # PostgreSQL and Chroma infrastructure
-│   ├── ingestion/          # PDF ingestion pipeline
-│   ├── llm/                # LLM client/service
-│   ├── models/             # Domain/database models
-│   ├── rag/                # RAG prompt and pipeline
-│   ├── retrieval/          # Semantic retrieval
-│   ├── schemas/            # Pydantic request/response models
-│   └── services/           # Application services
-├── alembic/                # Database migrations
-├── data/                   # Local uploads/vector data (runtime)
-├── docker/                 # Docker configuration
-├── docs/                   # Project documentation
-├── frontend/               # Next.js application
-├── tests/                  # Backend automated tests
-├── .github/workflows/      # CI workflows
-├── .env.example            # Environment template
-├── pyproject.toml          # Python project/tool configuration
-└── README.md
-```
+### Prerequisites
 
-## Prerequisites
-
-Install:
-
-- Python 3.12
-- uv
-- PostgreSQL
-- Ollama
-- Node.js/npm
-
-Pull the local model:
-
-```bash
-ollama pull llama3.2
-```
-
-## Backend Setup
+- Python 3.12 and [uv](https://docs.astral.sh/uv/)
+- Node.js 22 and npm
+- PostgreSQL 16
+- Ollama with `llama3.2`
 
 ```bash
 git clone https://github.com/UsmanAhamed12/book-rag-llama2.git
 cd book-rag-llama2
-uv sync --dev
 cp .env.example .env
-```
-
-Create a PostgreSQL database named `book_rag`, then update `POSTGRES_URL` and `SECRET_KEY` in `.env`.
-
-Run migrations when required:
-
-```bash
+uv sync --dev
+ollama pull llama3.2
 uv run alembic upgrade head
-```
-
-Start the API:
-
-```bash
 uv run uvicorn app.main:app --reload
 ```
 
-The API runs locally on port `8000`. Interactive API documentation is available at `/docs`.
-
-## Frontend Setup
+In another terminal:
 
 ```bash
 cd frontend
@@ -148,119 +77,67 @@ npm ci
 npm run dev
 ```
 
-The frontend runs locally on port `3000`.
+Open `http://localhost:3000`. The API runs at `http://localhost:8000`, with interactive OpenAPI documentation at `http://localhost:8000/docs`.
 
-## Environment Configuration
+For a containerized local environment:
 
-Important variables are documented in `.env.example`:
+```bash
+docker compose --env-file .env -f docker/docker-compose.yml up -d --build
+```
+
+See [Getting Started](docs/getting-started.md) and [Docker](docs/docker.md) for configuration and troubleshooting.
+
+## Configuration
+
+The checked-in [.env.example](.env.example) is the source of truth for local settings. Important controls include:
 
 ```env
-SECRET_KEY=replace_with_a_secure_random_secret
-POSTGRES_URL=postgresql+psycopg://postgres:your_password@localhost:5432/book_rag
+LLM_PROVIDER=ollama
 OLLAMA_MODEL=llama3.2
-OLLAMA_HOST=http://localhost:11434
 EMBEDDING_MODEL=BAAI/bge-small-en-v1.5
-CHROMA_DB_PATH=data/chroma
-UPLOAD_DIR=data/uploads
+RERANKING_ENABLED=true
+RETRIEVAL_CANDIDATE_K=20
+RERANKER_WEIGHT=0.7
+RETRIEVAL_MINIMUM_SCORE=0.35
 ```
 
-Generate a strong development secret with:
+AWS overrides the provider with `LLM_PROVIDER=bedrock` and uses the configured Bedrock inference profile. Never commit `.env`, secret values, uploaded PDFs, database dumps, or vector data.
+
+## Quality gates
 
 ```bash
-openssl rand -hex 32
-```
+uv run ruff check app tests scripts alembic
+uv run ruff format --check app tests scripts alembic
+uv run mypy app tests
+uv run pytest -q
 
-Never commit the real `.env` file, passwords, tokens, uploaded private documents, or runtime database data.
-
-## RAG Flow
-
-### Ingestion
-
-```text
-PDF -> Loader -> Text Cleaning -> Chunking -> Embeddings -> ChromaDB
-                                      |
-                                      +--> PostgreSQL metadata
-```
-
-### Question Answering
-
-```text
-Question
-  -> recent chat context
-  -> query rewrite
-  -> semantic retrieval
-  -> relevance filtering
-  -> grounded prompt
-  -> Llama 3.2 through Ollama
-  -> answer + source citations
-  -> chat persistence
-```
-
-The pipeline returns a fallback response instead of inventing an answer when sufficiently relevant context cannot be found.
-
-## Quality Checks
-
-Run the complete backend quality gate:
-
-```bash
-uv run ruff check app tests
-uv run ruff format --check app tests
-uv run mypy app
-uv run pytest -v
-```
-
-To automatically apply Ruff-safe fixes and formatting:
-
-```bash
-uv run ruff check app tests --fix
-uv run ruff format app tests
-```
-
-For the frontend:
-
-```bash
 cd frontend
-npm ci
 npm run lint
-npm run build
+npm run build -- --webpack
 ```
 
-The repository CI validates backend checks, frontend checks, and Docker build checks before changes are considered stable.
+Terraform validation:
 
-## API Areas
-
-The application exposes versioned `/api/v1` routes covering authentication, document upload/management, chat, and chat sessions. FastAPI's generated `/docs` page is the canonical interactive endpoint reference for the running version.
-
-See [docs/api.md](docs/api.md) for the API overview.
-
-## Security
-
-The project uses JWT-based authentication and user-scoped resources. Production deployments should additionally use HTTPS, strong secrets, restricted CORS origins, database least privilege, upload limits, secure secret management, and appropriate observability/rate limiting.
-
-See [docs/security.md](docs/security.md).
+```bash
+terraform -chdir=infra/terraform/environments/dev fmt -check -recursive
+terraform -chdir=infra/terraform/environments/dev validate
+```
 
 ## Documentation
 
 - [Architecture](docs/architecture.md)
-- [Getting Started](docs/getting-started.md)
-- [Development Guide](docs/development.md)
-- [API Guide](docs/api.md)
-- [RAG Pipeline](docs/rag-pipeline.md)
+- [RAG pipeline](docs/rag-pipeline.md)
+- [AWS deployment](docs/deployment.md)
+- [Getting started](docs/getting-started.md)
+- [Development](docs/development.md)
+- [API](docs/api.md)
 - [Database](docs/database.md)
 - [Authentication](docs/authentication.md)
-- [Testing](docs/testing.md)
-- [Docker](docs/docker.md)
 - [Security](docs/security.md)
+- [Testing](docs/testing.md)
 - [Troubleshooting](docs/troubleshooting.md)
 - [Roadmap](docs/roadmap.md)
-- [Project History](docs/project-history.md)
 
-## Project Status
+## Status
 
-Version `0.1.0` establishes the stable project foundation: ingestion, embeddings, vector retrieval, RAG, authentication, persistence, chat sessions, frontend integration, strict backend typing, tests, Docker checks, and CI foundations.
-
-The next engineering phase focuses on retrieval quality, evaluation, observability, deployment hardening, and portfolio-grade production polish.
-
-## License
-
-No license is currently declared in the repository. Add a license before treating the project as generally reusable open-source software.
+The development environment is live on AWS at [d1n9699wkr1rp7.cloudfront.net](https://d1n9699wkr1rp7.cloudfront.net). It is suitable for demonstrations and controlled testing; review the production-hardening checklist in the security and deployment guides before handling sensitive or high-volume workloads.
